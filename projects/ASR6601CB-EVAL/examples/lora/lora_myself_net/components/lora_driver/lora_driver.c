@@ -27,6 +27,10 @@
 
 #define FW_DEBUG_VERSION "join-debug-v20260416-1"
 
+/* Keep node in run mode while debugging sensor and radio stability.
+ * STOP3 can suppress UART output and may miss expected wake sources in this app. */
+#define NODE_STOP3_ENABLE 0
+
 /* checksum helper moved to lora_protocol.h (lora_simple_checksum) */
 
 /* Blink state (node only) */
@@ -402,13 +406,11 @@ void handler_uart_data(uint8_t data)
     if (isOK)
     {
         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-        gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
         gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
     }
     else
     {
         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-        gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_HIGH);
         gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
     }
 }
@@ -837,28 +839,23 @@ int Ra08KitLoraTestStart(void)
                     {
                     case 1:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                        gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
                         gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                         break;
                     case 2:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                        gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_HIGH);
-                        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
+                        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                         break;
                     case 3:
-                        gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                        gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
+                        gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
                         gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                         break;
                     case 4:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                        gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
                         gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                         break;
 
                     case 5:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                        gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_HIGH);
                         gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                         break;
 
@@ -890,29 +887,24 @@ int Ra08KitLoraTestStart(void)
                             {
                             case 1:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                                gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
                                 gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                                 break;
                             case 2:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                                gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_HIGH);
-                                gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
+                                gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                                 break;
                             case 3:
-                                gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                                gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
+                                gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
                                 gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                                 break;
 
                             case 4:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                                gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
                                 gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                                 break;
 
                             case 5:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                                gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_HIGH);
                                 gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                                 break;
                             default:
@@ -1037,7 +1029,9 @@ int Ra08KitLoraTestStart(void)
 
             lp_before_ms = TimerGetCurrentTime();
             node_lp_enter_count++;
+    #if NODE_STOP3_ENABLE
             TimerLowPowerHandler();
+    #endif
             lp_after_ms = TimerGetCurrentTime();
             slept_ms = TimerGetElapsedTime(lp_before_ms);
 

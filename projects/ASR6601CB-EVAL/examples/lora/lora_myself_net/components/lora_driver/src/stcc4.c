@@ -10,7 +10,7 @@
 
 #define STCC4_I2C_ADDR             0x62
 #define STCC4_I2C_WAIT_TIMEOUT     200000U
-#define STCC4_POWER_ON_DELAY_MS    20U
+#define STCC4_POWER_ON_DELAY_MS    120U
 #define STCC4_MEASURE_WAIT_MS      5200U
 
 #define STCC4_CMD_START_PERIODIC   0x21B1
@@ -125,9 +125,10 @@ static bool stcc4_read_bytes(uint8_t *buf, uint8_t len)
 
 bool stcc4_init(void)
 {
-    stcc4_set_co2_en(false);
+    stcc4_set_co2_en(true);
+    delay_ms(STCC4_POWER_ON_DELAY_MS);
     stcc4_i2c_prepare();
-    printf("[STCC4] init done, CO2_EN active-high pulse mode\r\n");
+    printf("[STCC4] init done, CO2_EN active-high hold mode\r\n");
     return true;
 }
 
@@ -142,61 +143,49 @@ bool stcc4_read_co2(uint16_t *co2_ppm)
     }
 
     stcc4_set_co2_en(true);
-    delay_ms(STCC4_POWER_ON_DELAY_MS);
     stcc4_i2c_prepare();
 
     if (!stcc4_write_cmd_u16(STCC4_CMD_START_PERIODIC)) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     delay_ms(STCC4_MEASURE_WAIT_MS);
 
     if (!stcc4_write_cmd_u16(STCC4_CMD_DATA_READY)) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     if (!stcc4_read_bytes(ready_buf, 3)) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     if (stcc4_crc8(ready_buf, 2) != ready_buf[2]) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     ready_word = (uint16_t)(((uint16_t)ready_buf[0] << 8) | ready_buf[1]);
     if ((ready_word & 0x07FFU) == 0U) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     if (!stcc4_write_cmd_u16(STCC4_CMD_READ_MEASUREMENT)) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     if (!stcc4_read_bytes(meas, 9)) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     if (stcc4_crc8(&meas[0], 2) != meas[2]) {
-        stcc4_set_co2_en(false);
         return false;
     }
     if (stcc4_crc8(&meas[3], 2) != meas[5]) {
-        stcc4_set_co2_en(false);
         return false;
     }
     if (stcc4_crc8(&meas[6], 2) != meas[8]) {
-        stcc4_set_co2_en(false);
         return false;
     }
 
     *co2_ppm = (uint16_t)(((uint16_t)meas[0] << 8) | meas[1]);
-    stcc4_set_co2_en(false);
     return true;
 }
