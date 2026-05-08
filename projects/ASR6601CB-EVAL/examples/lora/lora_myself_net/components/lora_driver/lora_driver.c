@@ -41,6 +41,7 @@ static int blink_toggle_interval = 250; /* ms */
 static int blink_led_state = 0;
 static TimerTime_t node_last_report_at = 0;
 static TimerTime_t node_last_loop_at = 0;
+static TimerTime_t node_tx_started_at = 0;
 static uint32_t node_lp_enter_count = 0;
 static uint32_t node_lp_wakeup_count = 0;
 static bool node_report_due_immediately = false;
@@ -405,13 +406,11 @@ void handler_uart_data(uint8_t data)
 
     if (isOK)
     {
-        gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
+        gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
     }
     else
     {
         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
     }
 }
 
@@ -500,8 +499,11 @@ static void node_send_sensor_report(const char *reason)
         printf("[NODE] %s direct report send uid=%02X%02X%02X%02X T=%.2fC RH=%.2f%% Vcap=%.3fV CO2=%uppm TVOC=%uppb LUX=%u\r\n",
            reason, uid[0], uid[1], uid[2], uid[3], t100 / 100.0f, rh100 / 100.0f,
             vcap_mv / 1000.0f, (unsigned)co2_ppm, (unsigned)tvoc_ppb, (unsigned)lux);
+    printf("[NODE] tx submit begin len=%u\r\n", (unsigned)sizeof(pkt));
     sendMsgFlag = 1;
+    node_tx_started_at = TimerGetCurrentTime();
     Radio.Send(pkt, sizeof(pkt));
+    printf("[NODE] tx submit return\r\n");
     node_last_report_at = TimerGetCurrentTime();
 }
 #endif
@@ -839,24 +841,19 @@ int Ra08KitLoraTestStart(void)
                     {
                     case 1:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                         break;
                     case 2:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                         break;
                     case 3:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                         break;
                     case 4:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                         break;
 
                     case 5:
                         gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                        gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                         break;
 
                     default:
@@ -887,25 +884,20 @@ int Ra08KitLoraTestStart(void)
                             {
                             case 1:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                                gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                                 break;
                             case 2:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                                gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                                 break;
                             case 3:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                                gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                                 break;
 
                             case 4:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                                gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_LOW);
                                 break;
 
                             case 5:
                                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                                gpio_write(GPIOA, GPIO_PIN_7, GPIO_LEVEL_HIGH);
                                 break;
                             default:
                                 break;
@@ -989,6 +981,14 @@ int Ra08KitLoraTestStart(void)
             node_send_sensor_report("startup");
         } else if (TimerGetElapsedTime(node_last_report_at) >= sht_interval_ms) {
             node_send_sensor_report("periodic");
+        }
+
+        /* Recover if TX completion callback was lost and send lock remains stuck. */
+        if ((sendMsgFlag == 1) && (TimerGetElapsedTime(node_tx_started_at) > 5000U)) {
+            printf("[NODE] tx stuck >5s, force recover to RX\r\n");
+            Radio.Sleep();
+            Radio.Rx(RX_TIMEOUT_VALUE);
+            sendMsgFlag = 2;
         }
 
         /* Blink state update based on elapsed loop time. */

@@ -33,6 +33,12 @@ extern "C"
 #define CONFIG_CO2_EN_GPIOX GPIOA
 #define CONFIG_CO2_EN_PIN GPIO_PIN_5
 
+/* SGP30 TVOC sensor enable */
+#define CONFIG_TVOC_EN_GPIOX GPIOA
+#define CONFIG_TVOC_EN_PIN GPIO_PIN_7
+#define CONFIG_TVOC_EN_ACTIVE_HIGH 1
+#define CONFIG_TVOC_POWER_ON_DELAY_MS 20U
+
 /* BH1620FVC (analog current output) */
 /* IO11: light analog output sampling pin */
 #define CONFIG_BH1620_ADC_GPIOX GPIOA
@@ -58,9 +64,8 @@ extern "C"
 #define CONFIG_VCAP_ADC_CHAN 2U
 
 /* SHT40 humidity sensor enable (HUM_EN) */
-/* HUM_EN is wired to SWDIO (PA13) */
 #define CONFIG_HUM_EN_GPIOX GPIOA
-#define CONFIG_HUM_EN_PIN GPIO_PIN_13
+#define CONFIG_HUM_EN_PIN GPIO_PIN_6
 
 #ifdef __cplusplus
 }

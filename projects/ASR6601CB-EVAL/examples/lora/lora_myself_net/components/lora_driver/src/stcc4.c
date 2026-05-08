@@ -10,12 +10,17 @@
 
 #define STCC4_I2C_ADDR             0x62
 #define STCC4_I2C_WAIT_TIMEOUT     200000U
-#define STCC4_POWER_ON_DELAY_MS    120U
+/* SCD41 datasheet: >= 1000 ms after VDD stabilizes before first command */
+#define STCC4_POWER_ON_DELAY_MS    1000U
 #define STCC4_MEASURE_WAIT_MS      5200U
 
 #define STCC4_CMD_START_PERIODIC   0x21B1
 #define STCC4_CMD_DATA_READY       0xE4B8
 #define STCC4_CMD_READ_MEASUREMENT 0xEC05
+
+/* Track whether periodic measurement mode has already been started.
+ * The SCD41 will NAK a second start_periodic while already in periodic mode. */
+static bool s_periodic_started = false;
 
 static bool stcc4_write_cmd_u16(uint16_t cmd);
 
@@ -125,10 +130,13 @@ static bool stcc4_read_bytes(uint8_t *buf, uint8_t len)
 
 bool stcc4_init(void)
 {
+    s_periodic_started = false;
     stcc4_set_co2_en(true);
+    /* SCD41 requires 1000 ms after power-on before accepting any command */
     delay_ms(STCC4_POWER_ON_DELAY_MS);
     stcc4_i2c_prepare();
-    printf("[STCC4] init done, CO2_EN active-high hold mode\r\n");
+    printf("[STCC4] init done, CO2_EN hold, waited %ums for SCD41 boot\r\n",
+           (unsigned)STCC4_POWER_ON_DELAY_MS);
     return true;
 }
 
@@ -145,44 +153,60 @@ bool stcc4_read_co2(uint16_t *co2_ppm)
     stcc4_set_co2_en(true);
     stcc4_i2c_prepare();
 
-    if (!stcc4_write_cmd_u16(STCC4_CMD_START_PERIODIC)) {
-        return false;
+    /* Only send START_PERIODIC once; the SCD41 NAKs a second start
+     * while already in periodic measurement mode. */
+    if (!s_periodic_started) {
+        if (!stcc4_write_cmd_u16(STCC4_CMD_START_PERIODIC)) {
+            printf("[STCC4] start_periodic NAK\r\n");
+            return false;
+        }
+        s_periodic_started = true;
+        printf("[STCC4] periodic measurement started\r\n");
     }
 
     delay_ms(STCC4_MEASURE_WAIT_MS);
 
     if (!stcc4_write_cmd_u16(STCC4_CMD_DATA_READY)) {
+        printf("[STCC4] data_ready cmd NAK\r\n");
         return false;
     }
 
     if (!stcc4_read_bytes(ready_buf, 3)) {
+        printf("[STCC4] data_ready read failed\r\n");
         return false;
     }
 
     if (stcc4_crc8(ready_buf, 2) != ready_buf[2]) {
+        printf("[STCC4] data_ready CRC err\r\n");
         return false;
     }
 
     ready_word = (uint16_t)(((uint16_t)ready_buf[0] << 8) | ready_buf[1]);
     if ((ready_word & 0x07FFU) == 0U) {
+        printf("[STCC4] data not ready (0x%04X)\r\n", ready_word);
         return false;
     }
 
     if (!stcc4_write_cmd_u16(STCC4_CMD_READ_MEASUREMENT)) {
+        printf("[STCC4] read_measurement cmd NAK\r\n");
         return false;
     }
 
     if (!stcc4_read_bytes(meas, 9)) {
+        printf("[STCC4] measurement read failed\r\n");
         return false;
     }
 
     if (stcc4_crc8(&meas[0], 2) != meas[2]) {
+        printf("[STCC4] meas CRC0 err\r\n");
         return false;
     }
     if (stcc4_crc8(&meas[3], 2) != meas[5]) {
+        printf("[STCC4] meas CRC1 err\r\n");
         return false;
     }
     if (stcc4_crc8(&meas[6], 2) != meas[8]) {
+        printf("[STCC4] meas CRC2 err\r\n");
         return false;
     }
 

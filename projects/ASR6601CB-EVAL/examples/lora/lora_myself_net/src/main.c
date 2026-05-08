@@ -95,7 +95,6 @@ void GPIO_IRQHandler(void)
                 printf(" Short Press\r\n");
 
                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_LOW);
-                gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_HIGH);
 
                 key.key_press_time = 0;
 
@@ -113,7 +112,6 @@ void GPIO_IRQHandler(void)
             {
 
                 gpio_write(GPIOA, GPIO_PIN_4, GPIO_LEVEL_HIGH);
-                gpio_write(GPIOA, GPIO_PIN_5, GPIO_LEVEL_LOW);
 
                 printf("Long Press \r\n");
                 key.key_lock = 1;
@@ -165,11 +163,7 @@ int main(void)
 
     // 初始化GPIO
     gpio_set_iomux(GPIOA, GPIO_PIN_4, 0);
-    gpio_set_iomux(GPIOA, GPIO_PIN_5, 0);
-    gpio_set_iomux(GPIOA, GPIO_PIN_7, 0);
     gpio_init(GPIOA, GPIO_PIN_4, GPIO_MODE_OUTPUT_PP_LOW);
-    gpio_init(GPIOA, GPIO_PIN_5, GPIO_MODE_OUTPUT_PP_LOW);
-    gpio_init(GPIOA, GPIO_PIN_7, GPIO_MODE_OUTPUT_PP_LOW);
 
 #ifdef CONFIG_GATEWAY
     printf("GateWay init OK \r\n");

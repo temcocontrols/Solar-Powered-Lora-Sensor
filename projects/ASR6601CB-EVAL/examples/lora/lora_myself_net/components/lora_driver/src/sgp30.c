@@ -6,6 +6,7 @@
 #include "tremo_i2c.h"
 #include "tremo_rcc.h"
 #include <stddef.h>
+#include <stdio.h>
 
 #define SGP30_I2C_ADDR          0x58
 #define SGP30_I2C_WAIT_TIMEOUT  200000U
@@ -14,6 +15,24 @@
 #define SGP30_CMD_IAQ_MEASURE   0x2008
 
 static bool sgp30_write_cmd_u16(uint16_t cmd);
+
+static void sgp30_set_en(bool on)
+{
+    bool drive_high;
+
+    gpio_set_iomux(CONFIG_TVOC_EN_GPIOX, CONFIG_TVOC_EN_PIN, 0);
+    gpio_init(CONFIG_TVOC_EN_GPIOX, CONFIG_TVOC_EN_PIN,
+              on ? GPIO_MODE_OUTPUT_PP_HIGH : GPIO_MODE_OUTPUT_PP_LOW);
+
+#if CONFIG_TVOC_EN_ACTIVE_HIGH
+    drive_high = on;
+#else
+    drive_high = !on;
+#endif
+
+    gpio_write(CONFIG_TVOC_EN_GPIOX, CONFIG_TVOC_EN_PIN,
+               drive_high ? GPIO_LEVEL_HIGH : GPIO_LEVEL_LOW);
+}
 
 static void sgp30_i2c_prepare(void)
 {
@@ -112,13 +131,17 @@ static bool sgp30_read_bytes(uint8_t *buf, uint8_t len)
 
 bool sgp30_init(void)
 {
+    sgp30_set_en(true);
+    delay_ms(CONFIG_TVOC_POWER_ON_DELAY_MS);
     sgp30_i2c_prepare();
 
     if (!sgp30_write_cmd_u16(SGP30_CMD_IAQ_INIT)) {
+        printf("[SGP30] iaq_init NAK\r\n");
         return false;
     }
 
     delay_ms(20);
+    printf("[SGP30] init OK\r\n");
     return true;
 }
 
@@ -130,20 +153,26 @@ bool sgp30_read_tvoc(uint16_t *tvoc_ppb)
         return false;
     }
 
+    sgp30_set_en(true);
+
     if (!sgp30_write_cmd_u16(SGP30_CMD_IAQ_MEASURE)) {
+        printf("[SGP30] measure_iaq NAK\r\n");
         return false;
     }
 
     delay_ms(20);
 
     if (!sgp30_read_bytes(buf, 6)) {
+        printf("[SGP30] read bytes failed\r\n");
         return false;
     }
 
     if (sgp30_crc8(&buf[0], 2) != buf[2]) {
+        printf("[SGP30] CRC0 err\r\n");
         return false;
     }
     if (sgp30_crc8(&buf[3], 2) != buf[5]) {
+        printf("[SGP30] CRC1 err\r\n");
         return false;
     }
 
