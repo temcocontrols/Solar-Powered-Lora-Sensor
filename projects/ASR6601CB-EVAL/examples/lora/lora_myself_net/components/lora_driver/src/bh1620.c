@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #define BH1620_ADC_TIMEOUT       100000U
 #define BH1620_ADC_AVG_SAMPLES   8U
@@ -155,6 +156,9 @@ bool bh1620_read_lux(uint16_t *lux)
      * sensor sensitivity (uA/lx), exposed as board-level macros for calibration. */
     current_ua = (voltage * 1000000.0f) / CONFIG_BH1620_RSENSE_OHM;
     lux_f = current_ua / CONFIG_BH1620_UA_PER_LUX;
+
+    printf("[BH1620] raw=%u voltage=%.3fV current=%.3fuA lux=%.1f\r\n",
+           (unsigned)raw, voltage, current_ua, lux_f);
 
     if (lux_f < 0.0f) {
         lux_f = 0.0f;

@@ -43,8 +43,8 @@ extern "C"
 /* IO11: light analog output sampling pin */
 #define CONFIG_BH1620_ADC_GPIOX GPIOA
 #define CONFIG_BH1620_ADC_PIN GPIO_PIN_11
-/* ADC channel for IO11, adjust after on-board validation if needed */
-#define CONFIG_BH1620_ADC_CHAN 3U
+/* ADC channel for IO11/PA11. SDK ADC example maps PA11 to channel 2. */
+#define CONFIG_BH1620_ADC_CHAN 2U
 
 /* LPRXD: BH1620 enable pin */
 #define CONFIG_BH1620_EN_GPIOX GPIOA
@@ -60,8 +60,8 @@ extern "C"
 /* Supercap voltage monitor input (ADC) */
 #define CONFIG_VCAP_ADC_GPIOX GPIOA
 #define CONFIG_VCAP_ADC_PIN GPIO_PIN_8
-/* ADC sample channel number (1..15). Update after channel scan result. */
-#define CONFIG_VCAP_ADC_CHAN 2U
+/* ADC channel for IO8/PA8. SDK ADC example maps PA8 to channel 1. */
+#define CONFIG_VCAP_ADC_CHAN 1U
 
 /* SHT40 humidity sensor enable (HUM_EN) */
 #define CONFIG_HUM_EN_GPIOX GPIOA
