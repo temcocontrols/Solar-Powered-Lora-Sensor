@@ -30,6 +30,7 @@ extern "C"
 #define CONFIG_RA08_I2C_SDA_PIN GPIO_PIN_15
 
 /* STCC4 CO2 sensor enable */
+#define CONFIG_CO2_ENABLE 1
 #define CONFIG_CO2_EN_GPIOX GPIOA
 #define CONFIG_CO2_EN_PIN GPIO_PIN_5
 
@@ -40,6 +41,11 @@ extern "C"
 #define CONFIG_TVOC_POWER_ON_DELAY_MS 20U
 
 /* BH1620FVC (analog current output) */
+#define CONFIG_BH1620_ENABLE 1
+
+/* Set to 1 to bypass all sensor/ADC reads and verify the radio TX path only. */
+#define CONFIG_NODE_TX_SENSOR_BYPASS 0
+
 /* IO11: light analog output sampling pin */
 #define CONFIG_BH1620_ADC_GPIOX GPIOA
 #define CONFIG_BH1620_ADC_PIN GPIO_PIN_11
@@ -58,6 +64,7 @@ extern "C"
 #define CONFIG_BH1620_UA_PER_LUX 0.50f
 
 /* Supercap voltage monitor input (ADC) */
+#define CONFIG_VCAP_ENABLE 1
 #define CONFIG_VCAP_ADC_GPIOX GPIOA
 #define CONFIG_VCAP_ADC_PIN GPIO_PIN_8
 /* ADC channel for IO8/PA8. SDK ADC example maps PA8 to channel 1. */

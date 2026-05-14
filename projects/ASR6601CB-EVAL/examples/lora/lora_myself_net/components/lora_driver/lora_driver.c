@@ -154,6 +154,21 @@ int8_t SnrValue = 0;
 uint32_t ChipId[2] = {0};
 uint8_t sendMsgFlag = 2; // 0：空闲状态可以发送数�?�?1：�?�在发送，等待发送完成；2：发送完�?
 
+#ifndef CONFIG_GATEWAY
+static void node_radio_quiesce_before_sensor_read(void)
+{
+    Radio.Sleep();
+    Radio.IrqProcess();
+    State = LORA_IDLE;
+}
+
+static void node_radio_clear_stale_irq_before_tx(void)
+{
+    Radio.IrqProcess();
+    State = LORA_IDLE;
+}
+#endif
+
 /*!
  * Radio events function pointer
  */
@@ -440,26 +455,46 @@ static void node_send_sensor_report(const char *reason)
     float vcap = 0.0f;
     uint16_t co2_ppm = 0U;
     uint16_t tvoc_ppb = 0U;
-    uint16_t lux = 0U;
+    uint16_t lux = 215U;
+    node_radio_quiesce_before_sensor_read();
     printf("[NODE] %s begin sensor read\r\n", reason);
+#if CONFIG_NODE_TX_SENSOR_BYPASS
+    int ok = 1;
+    t = 27.24f;
+    rh = 39.73f;
+    vcap = 0.077f;
+    printf("[NODE] %s sensor bypass enabled, sending fixed TX test packet\r\n", reason);
+#else
     int ok = sht_sensor_read(&t, &rh);
+#if CONFIG_VCAP_ENABLE
     vcap = adc_monitor_read_voltage();
+#else
+    vcap = 0.077f;
+    printf("[NODE] %s Vcap ADC disabled for TX isolation\r\n", reason);
+#endif
+#if CONFIG_CO2_ENABLE
     if (!stcc4_read_co2(&co2_ppm)) {
         printf("[NODE] %s STCC4 read failed, sending CO2=0\r\n", reason);
         co2_ppm = 0U;
     }
+#else
+    printf("[NODE] %s CO2 disabled for TX isolation\r\n", reason);
+#endif
     if (!sgp30_read_tvoc(&tvoc_ppb)) {
         printf("[NODE] %s SGP30 read failed, sending TVOC=0\r\n", reason);
         tvoc_ppb = 0U;
     }
+#if CONFIG_BH1620_ENABLE
     if (!bh1620_read_lux(&lux)) {
         printf("[NODE] %s BH1620 read failed, sending LUX=0\r\n", reason);
         lux = 0U;
     }
+#endif
     if (vcap < 0.0f) {
         printf("[NODE] %s ADC read timeout, sending Vcap=0\r\n", reason);
         vcap = 0.0f;
     }
+#endif
 
     if (!ok) {
         printf("[NODE] %s sensor read failed, sending zeros\r\n", reason);
@@ -500,6 +535,7 @@ static void node_send_sensor_report(const char *reason)
            reason, uid[0], uid[1], uid[2], uid[3], t100 / 100.0f, rh100 / 100.0f,
             vcap_mv / 1000.0f, (unsigned)co2_ppm, (unsigned)tvoc_ppb, (unsigned)lux);
     printf("[NODE] tx submit begin len=%u\r\n", (unsigned)sizeof(pkt));
+    node_radio_clear_stale_irq_before_tx();
     sendMsgFlag = 1;
     node_tx_started_at = TimerGetCurrentTime();
     Radio.Send(pkt, sizeof(pkt));
@@ -601,7 +637,11 @@ int Ra08KitLoraTestStart(void)
 #error "Please define a frequency band in the compiler options."
 #endif
 
+#ifdef CONFIG_GATEWAY
     Radio.Rx(RX_TIMEOUT_VALUE);
+#else
+    Radio.Sleep();
+#endif
 
 #ifndef CONFIG_GATEWAY
     {
@@ -619,11 +659,15 @@ int Ra08KitLoraTestStart(void)
             printf("SHT sensor init FAILED\r\n");
         }
 
+#if CONFIG_CO2_ENABLE
         if (stcc4_init()) {
             printf("STCC4 sensor init OK\r\n");
         } else {
             printf("STCC4 sensor init FAILED\r\n");
         }
+#else
+        printf("STCC4 sensor disabled for TX isolation\r\n");
+#endif
 
         if (sgp30_init()) {
             printf("SGP30 sensor init OK\r\n");
@@ -631,21 +675,31 @@ int Ra08KitLoraTestStart(void)
             printf("SGP30 sensor init FAILED\r\n");
         }
 
+#if CONFIG_BH1620_ENABLE
         if (bh1620_init()) {
             printf("BH1620 sensor init OK\r\n");
         } else {
             printf("BH1620 sensor init FAILED\r\n");
         }
+#else
+        printf("BH1620 sensor disabled for TX isolation\r\n");
+#endif
 
+    #if CONFIG_NODE_TX_SENSOR_BYPASS
+        printf("ADC monitor init skipped for TX isolation\r\n");
+    #elif !CONFIG_VCAP_ENABLE
+        printf("ADC monitor init skipped for Vcap TX isolation\r\n");
+    #else
         adc_monitor_init();
         printf("ADC monitor init OK (IO8/PA8)\r\n");
+    #endif
 
         node_report_due_immediately = true;
         node_last_report_at = TimerGetCurrentTime();
         node_last_loop_at = TimerGetCurrentTime();
         State = LORA_IDLE;
-        Radio.Rx(RX_TIMEOUT_VALUE);
-        printf("[NODE] radio initialized, direct sensor reporting enabled\r\n");
+        Radio.Sleep();
+        printf("[NODE] radio initialized, TX-only direct sensor reporting enabled\r\n");
     }
 #else
     printf("[GW] radio initialized, waiting for sensor reports\r\n");
@@ -667,7 +721,11 @@ int Ra08KitLoraTestStart(void)
         switch (State)
         {
         case RX:
+#ifdef CONFIG_GATEWAY
             Radio.Rx(RX_TIMEOUT_VALUE);
+#else
+            Radio.Sleep();
+#endif
             State = LORA_IDLE;
 
 #ifdef CONFIG_GATEWAY
@@ -768,6 +826,19 @@ int Ra08KitLoraTestStart(void)
                     } else {
                         printf("Node %d unknown FIND ACK status: %02X\r\n", addr, status);
                     }
+                }
+            }
+            else
+            {
+                char drop_buf[40];
+                int drop_len = snprintf(drop_buf, sizeof(drop_buf),
+                                        "AT+DROP=%u,%02X,%02X,%02X\r\n",
+                                        (unsigned)BufferSize,
+                                        BufferSize > 0 ? Buffer[0] : 0,
+                                        BufferSize > 1 ? Buffer[1] : 0,
+                                        BufferSize > 2 ? Buffer[2] : 0);
+                if (drop_len > 0 && drop_len < (int)sizeof(drop_buf)) {
+                    serial_output((uint8_t *)drop_buf, drop_len);
                 }
             }
             // sendMasterAsk(SLAVE1_ADDR, OP_R_SENSOR, PRAM_R_ALL); //主机发送指�?
@@ -923,19 +994,31 @@ int Ra08KitLoraTestStart(void)
             break;
         case TX:
             // printf("[%s()-%d]Tx done\r\n", __func__, __LINE__);
+#ifdef CONFIG_GATEWAY
             Radio.Rx(RX_TIMEOUT_VALUE);
+#else
+            Radio.Sleep();
+#endif
             sendMsgFlag = 2;
             State = LORA_IDLE;
             break;
         case RX_TIMEOUT:
         case RX_ERROR:
             // printf("[%s()-%d]Rx timeout/error\r\n",__func__,__LINE__);
+#ifdef CONFIG_GATEWAY
             Radio.Rx(RX_TIMEOUT_VALUE);
+#else
+            Radio.Sleep();
+#endif
             State = LORA_IDLE;
             break;
         case TX_TIMEOUT:
             printf("[%s()-%d]Tx timeout\r\n", __func__, __LINE__);
+#ifdef CONFIG_GATEWAY
             Radio.Rx(RX_TIMEOUT_VALUE);
+#else
+            Radio.Sleep();
+#endif
             sendMsgFlag = 2;
             State = LORA_IDLE;
             break;
@@ -985,9 +1068,8 @@ int Ra08KitLoraTestStart(void)
 
         /* Recover if TX completion callback was lost and send lock remains stuck. */
         if ((sendMsgFlag == 1) && (TimerGetElapsedTime(node_tx_started_at) > 5000U)) {
-            printf("[NODE] tx stuck >5s, force recover to RX\r\n");
+            printf("[NODE] tx stuck >5s, force recover to idle\r\n");
             Radio.Sleep();
-            Radio.Rx(RX_TIMEOUT_VALUE);
             sendMsgFlag = 2;
         }
 

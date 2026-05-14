@@ -147,9 +147,10 @@ bool stcc4_read_co2(uint16_t *co2_ppm)
     if (co2_ppm == NULL) {
         return false;
     }
+
     stcc4_set_co2_en(true);
     stcc4_i2c_prepare();
-    /* Only send start_continuous_measurement once to avoid repeated-start NAK. */
+
     if (!s_continuous_started) {
         if (!stcc4_write_cmd_u16(STCC4_CMD_START_CONTINUOUS)) {
             printf("[STCC4] start_continuous NAK\r\n");
@@ -157,8 +158,8 @@ bool stcc4_read_co2(uint16_t *co2_ppm)
         }
         s_continuous_started = true;
         printf("[STCC4] continuous measurement started\r\n");
+        delay_ms(STCC4_MEASURE_WAIT_MS);
     }
-    delay_ms(STCC4_MEASURE_WAIT_MS);
 
     if (!stcc4_write_cmd_u16(STCC4_CMD_READ_MEASUREMENT)) {
         printf("[STCC4] read_measurement cmd NAK\r\n");
