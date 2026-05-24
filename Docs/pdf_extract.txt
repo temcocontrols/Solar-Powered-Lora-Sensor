@@ -1,0 +1,255 @@
+﻿pages: 4
+--- page 1 (3003 chars) ---
+TEMCO CONTROLS
+Indoor Ambient Solar-Powered Environmental Sensor Node
+PRODUCT DATASHEET
+Rev 1.0  |  temcocontrols.com
+┬® Temco Controls  |  temcocontrols.com
+Page 1
+Indoor Ambient Solar-Powered Wireless Environmental Sensor Node
+Temperature ┬À Humidity ┬À CO2 (opt.) ┬À TVOC (opt.) ┬À Ambient Light | Long-Range Wireless | Zero Maintenance | No Battery
+The Temco Controls Indoor Ambient Solar-Powered Sensor Node is a completely
+maintenance-free wireless monitoring solution for commercial and industrial buildings
+where running cable is impractical or cost-prohibitive.
+It collects temperature, humidity, and optionally CO2, TVOC, and ambient light data, then
+transmits all readings wirelessly via long-range sub-GHz radio to the paired Temco
+gateway ÔÇö which delivers the data to any BACnet or Modbus building automation system
+over Ethernet or Wi-Fi.
+The key innovation is the indoor-tuned solar cell. Standard outdoor solar panels are
+designed for high-intensity sunlight. This sensor uses a specially engineered cell optimised
+for the frequency spectrum of indoor LED and fluorescent lighting ÔÇö so it charges and
+runs continuously under ordinary office, warehouse, or corridor light with no batteries and
+no maintenance ever required.
+23.5
+┬░C
+48.2
+%
+650
+ppm
+AQI  95 ÔÇö GOOD
+Model: AQ-Solar-LCD
+(illustration)
+Indoor Solar Panel
+  KEY HIGHLIGHTS
+Indoor-tuned solar cell ÔÇö charges under LED and
+fluorescent lighting; no outdoor sunlight needed
+Supercapacitor energy storage ÔÇö zero batteries, zero
+maintenance, no shipping restrictions, accepted in all
+buildings
+Long-range wireless ÔÇö 1 km+ open air, 10+ floors through
+wood or concrete construction
+Ad-hoc installation ÔÇö mount anywhere indoors that
+receives ambient light; no cable, no conduit
+Onboard CPU intelligently reduces reporting rate during
+low-light periods, then auto-resumes
+Monitors temperature, humidity plus optional CO2, TVOC,
+and ambient light
+Gateway reports over BACnet and Modbus ÔÇö compatible
+with any standard BMS
+Dual-interface gateway ÔÇö Ethernet and Wi-Fi
+simultaneously
+T3000 software is free and open-source ÔÇö unlimited
+sensor trending, SQL logging, floor-plan overlays, email
+alerts
+Suitable for hard-to-wire locations: rooftops, atriums,
+historical buildings, remote plant rooms
+  SENSOR SPECIFICATIONS
+All data is transmitted wirelessly ÔÇö there are no wired signal outputs from the sensor node.
+Sensor
+Range
+Accuracy
+ Interface
+ Response
+Drift/yr
+Temperature
+-30 to +70 ┬░C
+┬▒0.2 ┬░C (5ÔÇô60 ┬░C)
+Long-range wireless
+< 10 s
+< ┬▒0.1 ┬░C
+Relative Humidity
+0ÔÇô100% RH
+┬▒2 % (0ÔÇô90 %)
+Long-range wireless
+< 10 s
+< ┬▒0.5 %
+COÔûá (optional)
+380ÔÇô32,000 ppm
+┬▒(100 ppm + 10%)
+Long-range wireless
+20 s (¤ä63%)
+< 1 ppm
+TVOC (optional)
+0ÔÇô60,000 ppb
+IAQ index (calibrated)
+Long-range wireless
+< 30 s
+ÔÇö
+Ambient Light
+0ÔÇô100,000 lux
+┬▒10 %
+Long-range wireless
+< 200 ms
+ÔÇö
+* CO2 and TVOC are optional sensors. TVOC uses a production-calibrated Sensirion SGP sensor and reports an Indoor Air Quality (IAQ) index based on total
+volatile organic compounds.
+--- page 2 (2637 chars) ---
+TEMCO CONTROLS
+Indoor Ambient Solar-Powered Environmental Sensor Node
+PRODUCT DATASHEET
+Rev 1.0  |  temcocontrols.com
+┬® Temco Controls  |  temcocontrols.com
+Page 2
+  INDOOR SOLAR & SUPERCAPACITOR ENERGY STORAGE
+Conventional solar panels target the 400ÔÇô700 nm visible spectrum at high outdoor irradiance (around 1,000 W/m┬▓). Indoor LED and fluorescent
+lighting operates at far lower irradiance (100ÔÇô500 lux) with a different spectral profile. The solar cell in this sensor node is specifically engineered
+and tuned for these indoor-light frequencies ÔÇö maximising energy harvest under typical building lighting conditions where a standard solar cell
+would barely function.
+Energy is stored in a supercapacitor or hybrid supercapacitor rather than a rechargeable lithium battery. This delivers major practical
+advantages for building operators:
+No battery replacement ÔÇö ever
+Eliminates maintenance visits and associated labour costs
+No hazardous materials
+No lithium; compliant with shipping and building chemical policies
+Building-friendly
+Accepted in hospitals, data centres, and facilities with strict battery bans
+Intelligent power management
+CPU automatically slows reporting rate when stored energy is low, then resumes when light
+returns
+Long service life
+Supercapacitors handle far more charge/discharge cycles than batteries
+  SYSTEM OVERVIEW ÔÇö WIRING & CONNECTIVITY
+TEMCO GATEWAY
+(T3 Nano / current model)
+Ethernet / Wi-Fi
+BACnet / Modbus
+BMS / BACnet
+Modbus / T3000
+Temp/RH
+Solar powered
+COÔûá*
+Solar powered
+TVOC*
+Solar powered
+Light
+Solar powered
+Indoor Solar
+Panel
+Supercapacitor
+No battery
+Gateway (wired to network)
+Wireless Nodes
+* optional sensors
+Long-range wireless (sub-GHz)
+The sensor nodes communicate wirelessly with the Temco gateway. The gateway connects to the building network via Ethernet or Wi-Fi and exposes all sensor
+data over BACnet MS/TP and Modbus RTU/TCP. The sensor nodes and gateway must be used together ÔÇö they use a proprietary pairing method that ensures
+reliable, secure communication.
+  GATEWAY & RADIO SPECIFICATIONS
+ Parameter
+ Value
+ Notes
+ 
+Wireless Protocol
+Long-Range (LoRa)
+Sub-GHz; penetrates walls & floors
+TX Power
+Up to 22 dBm
+Configurable per installation
+Range ÔÇö Open Air
+> 1 km
+Line of sight
+Range ÔÇö Through Floors
+10+ floors typical
+Wood/concrete; rebar may reduce range
+Gateway Connectivity
+Ethernet + Wi-Fi
+Dual interface, both simultaneous
+Protocols Supported
+BACnet, Modbus
+Standard building automation protocols
+Max Sensor Nodes
+Contact Temco
+Multi-node support confirmed
+Operating Temp
+-40 to +85 ┬░C
+Electronics rating
+Supply Voltage
+3.0 ÔÇô 3.6 V (typ. 3.3 V)
+Internal regulated
+--- page 3 (2991 chars) ---
+TEMCO CONTROLS
+Indoor Ambient Solar-Powered Environmental Sensor Node
+PRODUCT DATASHEET
+Rev 1.0  |  temcocontrols.com
+┬® Temco Controls  |  temcocontrols.com
+Page 3
+ Parameter
+ Value
+ Notes
+ 
+Energy Storage
+Supercapacitor / Hybrid
+No battery ÔÇö zero maintenance
+Darkness Hold-up
+TBD ÔÇö confirm w/ test
+Depends on reporting interval & cap size
+  HOW IT WORKS ÔÇö TYPICAL OPERATION SEQUENCE
+#
+ Operation Step
+ 
+1
+Indoor ambient light charges the supercapacitor ÔÇö no battery required
+2
+Sensor node stays in deep low-power mode to maximise hold-up time in darkness
+3
+At the configured interval, the node wakes up automatically
+4
+Active sensors are powered on; temperature, humidity, COÔûá*, TVOC*, and light data collected
+5
+Data packet is transmitted wirelessly via long-range radio
+6
+Temco gateway receives the packet and maps values to its input registers
+7
+Data is available over BACnet, Modbus, Ethernet, and Wi-Fi
+8
+T3000 logs readings to SQL database; email alerts can be configured for any threshold
+The gateway maps all received sensor values to its input registers. These are exposed over BACnet (standard in HVAC / commercial buildings) and Modbus
+(standard in industrial systems) to any connected building management system. T3000 can log an unlimited number of sensor readings for an unlimited duration
+ÔÇö storage is only limited by hard-drive capacity.
+  T3000 SOFTWARE ÔÇö FREE & OPEN SOURCE
+Free download, no licence fee
+No subscription, no per-device cost
+Live dashboard
+View all sensor values in real time across the building
+SQL trend logging
+Handles millions of records; unlimited sensors, unlimited history
+Floor-plan views
+Place sensor icons on building drawings and see live readings
+Email & push alerts
+Notify staff automatically when CO2, temperature, or humidity exceed setpoints
+BACnet & Modbus integration
+Connect to any third-party BMS platform with no extra middleware
+Open source
+Community-supported; full access to configuration and scripting
+  INSTALLATION & COMMISSIONING
+Installation is straightforward ÔÇö mount the sensor wherever it receives consistent indoor light, then pair it with the Temco gateway using the
+firmware pairing procedure.
+Mount the sensor node where indoor ambient light is present ÔÇö ceiling, wall, or column
+Avoid locations in permanent shadow unless a larger energy storage option is specified
+Power the Temco gateway and connect it to the building network via Ethernet or Wi-Fi
+Pair the sensor node to the gateway using the firmware pairing procedure (see gateway setup guide)
+Confirm live values appear in T3000 before enabling trend log recording
+For commissioning validation: log supercapacitor voltage, reporting interval, and packet reception quality over 24ÔÇô48 hours
+Note: Sensor configuration, reporting interval, and power behaviour may vary by firmware version. Solar performance depends on installation location and
+available light intensity. Contact Temco Controls for current firmware documentation and gateway model information.
+--- page 4 (395 chars) ---
+TEMCO CONTROLS
+Indoor Ambient Solar-Powered Environmental Sensor Node
+PRODUCT DATASHEET
+Rev 1.0  |  temcocontrols.com
+┬® Temco Controls  |  temcocontrols.com
+Page 4
+  ORDERING INFORMATION
+Contact Temco Controls for current part numbers, gateway model designation, optional sensor configurations, and volume pricing. The sensor node
+and gateway must be ordered and used together.
+temcocontrols.com
