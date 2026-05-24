@@ -1,4 +1,0 @@
-The SoftEther
-\\192.168.0.2
-then right click the z drive
-do the connect thingy
