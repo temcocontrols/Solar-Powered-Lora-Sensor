@@ -1,58 +1,91 @@
-# SolarSensor
+# Solar RA-08 Sensor Nodes
 
-Product visuals and technical drawings for the **Temco Controls indoor solar-powered environmental sensor node** (second-generation datasheet: `Docs/SECONDGEN.pdf`, model **AQ-Solar-LCD**).
+## Project Overview
 
-## What this repo is for
+This project demonstrates solar-powered RA-08 sensor nodes using either SHT3x or SHT40 sensors.  
+Each node samples temperature and humidity, then reports the data to an RA-08 gateway over LoRa.
 
-- Automated **3D product renders** and **system diagrams** (gateway + wireless nodes)
-- Assets for datasheets, T3000 floor plans, and marketing
-- Repeatable generation via **Blender + MCP** (natural-language prompts that drive Blender Python)
+The gateway supports AT commands over UART for management functions such as node discovery.
 
-Not related to the WECHAT messaging project.
+## Key Features
 
-## Source materials
+- Compile-time selectable sensor: **SHT3x** or **SHT40**
+- Node auto-join using **JOIN / ASSIGN**
+- Persistent node address storage in flash
+- Gateway AT command for discovery:
+  - `AT+FIND=<addr>[,<duration_secs>]`
+- Node identification support:
+  - nodes blink to identify themselves
+  - nodes send ACK for both start and finish of identification
+- Periodic sensor reporting
+- Sensor read failure handling:
+  - node sends `0/0` if sensor reading fails
 
-| File | Role |
-|------|------|
-| `Docs/SECONDGEN.pdf` | Current product datasheet (Rev 1.0) |
-| `Docs/SolarPoweredSensor.pdf` | Earlier / related product PDF |
-| `Docs/AQ-N-3.pdf` | Additional product reference |
-| `Docs/FIRSTGEN.docx`, `Docs/Project with dad...docx` | First-gen notes and draft copy |
-| `Docs/T3E-Nano_*.png`, `Docs/image-removebg-preview.png` | Gateway / product cutouts for compositing |
-| `Docs/T3000BacnetProgrammableControllerSeries-2.pdf` | Gateway (T3 Nano) documentation |
+## Hardware
 
-## Drawing automation (Blender MCP)
+### Node
+- RA-08 (ASR6601)
+- SHT3x or SHT40 sensor
+- Solar panel
+- Power management circuit
+- Battery or supercapacitor recommended
 
-Inspired by [Blender Can Do AI Now](https://youtu.be/xBLGsYLwgks) — Claude (or another MCP client) talks to Blender through the official [Blender MCP server](https://www.blender.org/lab/mcp-server/).
+### Gateway
+- RA-08 development board
+- UART connection to host device (PC or MCU)
 
-**Requirements**
+## Quick Start
 
-1. [Blender 5.1+](https://www.blender.org/download/)
-2. [MCP add-on](https://www.blender.org/lab/mcp-server/) (drag-and-drop install in Blender; enable MCP server on `localhost:9876`)
-3. MCP client: Claude Desktop, Cursor, or Llama.cpp — with `blender-mcp` server configured
+### Build Environment
+Recommended build environment:
 
-See `Docs/blender-mcp-setup.md` for Windows setup and example prompts for this product.
+- **WSL**
+- **Ubuntu**
 
-**Security:** MCP runs LLM-generated Python inside Blender with no sandbox. Use a machine without sensitive data, or work on copies of `.blend` files.
-
-## Suggested drawing backlog
-
-1. **Hero product shot** — wall/ceiling-mounted node, LCD showing sample readings (23.5 °C, 48.2 %, 650 ppm, AQI)
-2. **System block diagram** — solar nodes → sub-GHz → Temco gateway → BACnet/Modbus → BMS (match datasheet p.2)
-3. **Cutaway / callouts** — indoor-tuned solar cell, supercapacitor, optional CO₂/TVOC modules
-4. **Installation stills** — mount locations, light requirements, pairing flow
-5. **T3000 floor-plan icons** — simple top-down sensor glyph for live overlays
-
-## Repo layout (target)
-
-```
-SolarSensor/
-  Docs/           # datasheets, setup, extracted text
-  blender/        # .blend scenes, exported PNG/GLB
-  prompts/        # reusable MCP prompt templates
-  scripts/        # optional Python helpers (batch export, dimensions)
+```bash
+cd /mnt/d/work/Ai-Thinker-LoRaWAN-Ra-08
+source build/envsetup.sh
+make -j32 projects/ASR6601CB-EVAL/examples/lora/lora_myself_net
 ```
 
-## Next step
+Select SHT40 at compile time:
 
-Pick one item from the backlog, open Blender with the MCP add-on running, and use a prompt from `prompts/` (or ask in Cursor with Blender MCP connected).
+```bash
+make CFLAGS+=" -DSHT_SENSOR_TYPE=40"
+```
+
+Flash firmware using `TremoProgrammer_v0.8.exe` as described in the project README.
+
+## Protocol / Commands
+
+### AT Command (to gateway UART)
+
+```text
+AT+FIND=<addr>[,<duration_secs>]\r\n
+# Example:
+AT+FIND=1,5
+```
+
+### LoRa FIND Packet (gateway -> node)
+
+```text
+A0 F9 <addr> <duration> <cs> A1
+```
+
+- `cs = (F9 + addr + duration) & 0xFF`
+
+### FIND ACK (node -> gateway)
+
+```text
+A0 FA <addr> <status> <cs> A1
+```
+
+- `status: 0x01 = started, 0x02 = finished`
+- `cs = (FA + addr + status) & 0xFF`
+
+## Solar Deployment Notes
+
+- Estimate peak transmit current and size battery/supercap to cover LoRa TX bursts.
+- Use low-power sleep modes and sensible reporting intervals to maximize uptime.
+- Include undervoltage protection and a charging controller for reliable operation.
+- Consider energy budgeting (duty cycle, transmit power, reporting interval) and use RTC wake when possible.
