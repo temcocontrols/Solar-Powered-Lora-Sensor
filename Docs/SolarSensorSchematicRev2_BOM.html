@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solar Sensor Schematic Rev2 - Bill of Materials</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #222; }
+    .wrap { padding: 16px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+    th, td {
+      border: 1px solid #d9d9d9;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    tr.title th {
+      background: #1f3864;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      padding: 14px 10px;
+    }
+    tr.header th {
+      background: #1f3864;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+    }
+    tr.odd td { background: #fff; }
+    tr.even td { background: #f2f2f2; }
+    td:first-child, th:first-child { text-align: center; white-space: nowrap; }
+    td:last-child, th:last-child { text-align: center; white-space: nowrap; }
+    td a { color: #1f3864; font-weight: bold; text-decoration: none; }
+    td a:hover { text-decoration: underline; }
+    nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    nav a {
+      padding: 8px 14px;
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      color: #1f3864;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    nav a.active {
+      background: #1f3864;
+      color: #fff;
+      border-color: #1f3864;
+    }
+    nav a:hover:not(.active) { background: #eef2f8; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+        <nav>
+      <a href="SolarSensorSchematicRev2_BOM.html" class="active">Bill of Materials</a>
+      <a href="SolarSensorSchematicRev2_BlockDiagram.html">Block Diagram</a>
+      <a href="SolarSensorSchematicRev2_Sensors.html">Sensors</a>
+      <a href="SolarSensorSchematicRev2_EnergyBudget.html">Energy Budget</a>
+      <a href="SolarSensorSchematicRev2_TODO.html">Firmware TODO</a>
+      <a href="SolarSensorSchematicRev2.pdf">Schematic PDF</a>
+      <a href="SolarSensorSchematicRev2_BOM.xlsx">Spreadsheet (.xlsx)</a>
+    </nav>
+    <table>
+      <thead>
+        <tr class="title"><th colspan="10">Solar Sensor Schematic Rev2 - Bill of Materials</th></tr>
+        <tr class="header"><th>Item</th><th>Reference Designators</th><th>Qty</th><th>Value</th><th>Footprint</th><th>Description</th><th>Manufacturer</th><th>MPN</th><th>Notes</th><th>Datasheet</th></tr>
+      </thead>
+      <tbody>
+        <tr class="odd"><td>1</td><td>MOD1</td><td>1</td><td>Ra-08</td><td>Module</td><td>LoRaWAN module ASR6601</td><td>Ai-Thinker</td><td>RA-08</td><td>Main radio/MCU module</td><td><a href="datasheets/RA-08.pdf" target="_blank" rel="noopener">RA-08.pdf</a></td></tr>
+        <tr class="even"><td>2</td><td>U2</td><td>1</td><td>BQ25505</td><td>QFN-24</td><td>Energy harvester PMIC</td><td>Texas Instruments</td><td>BQ25505</td><td>MPPT solar charger</td><td><a href="datasheets/BQ25505.pdf" target="_blank" rel="noopener">BQ25505.pdf</a></td></tr>
+        <tr class="odd"><td>3</td><td>U1</td><td>1</td><td>TPS613221A</td><td>SOT-23-5</td><td>Boost converter 3.3V</td><td>Texas Instruments</td><td>TPS613221A</td><td>Output for RA-08 VCC</td><td><a href="datasheets/TPS613221A.pdf" target="_blank" rel="noopener">TPS613221A.pdf</a></td></tr>
+        <tr class="even"><td>4</td><td>U4</td><td>1</td><td>SGM2019-1.8YN5G/TR</td><td>SOT-23-5</td><td>1.8V LDO regulator</td><td>SG Micro</td><td>SGM2019-1.8YN5G/TR</td><td>Sensor 1.8V rail</td><td><a href="datasheets/SGM2019-1.8.pdf" target="_blank" rel="noopener">SGM2019-1.8.pdf</a></td></tr>
+        <tr class="odd"><td>5</td><td>U5;U7</td><td>2</td><td>SHT40</td><td>DFN-4</td><td>Temperature/humidity sensor</td><td>Sensirion</td><td>SHT40-AD1B-R2</td><td>Two footprints on schematic — populate one unless intentional</td><td><a href="datasheets/SHT40.pdf" target="_blank" rel="noopener">SHT40.pdf</a></td></tr>
+        <tr class="even"><td>6</td><td>U3</td><td>1</td><td>SGP30-2.5K</td><td>DIL-6</td><td>TVOC/eCO2 sensor</td><td>Sensirion</td><td>SGP30-2.5K</td><td>Optional TVOC section</td><td><a href="datasheets/SGP30.pdf" target="_blank" rel="noopener">SGP30.pdf</a></td></tr>
+        <tr class="odd"><td>7</td><td>U6</td><td>1</td><td>STCC4_CO2_SENSOR</td><td>Custom</td><td>CO2 sensor module</td><td>Sensirion</td><td>SCD41 or per STCC4 footprint</td><td>Verify exact CO2 part against library/footprint</td><td><a href="datasheets/STCC4.pdf" target="_blank" rel="noopener">STCC4.pdf</a></td></tr>
+        <tr class="even"><td>8</td><td>U8</td><td>1</td><td>GC2</td><td>Custom</td><td>Light sensor</td><td>—</td><td>GC2</td><td>Schematic lists GC2; firmware targets BH1620FVC</td><td><a href="datasheets/BH1620FVC.pdf" target="_blank" rel="noopener">BH1620FVC.pdf</a></td></tr>
+        <tr class="odd"><td>9</td><td>L2</td><td>1</td><td>22uH 1A</td><td>Inductor</td><td>Boost inductor for BQ25505</td><td>—</td><td>22uH 1A min</td><td>Harvesting boost</td><td></td></tr>
+        <tr class="even"><td>10</td><td>L1</td><td>1</td><td>4.7uH</td><td>Inductor</td><td>Boost inductor for TPS613221A</td><td>—</td><td>4.7uH</td><td>Step-up converter</td><td></td></tr>
+        <tr class="odd"><td>11</td><td>C3</td><td>1</td><td>0.22F 5.5V</td><td>Horizontal supercap</td><td>Supercapacitor storage</td><td>—</td><td>0.22F 5.5V</td><td>Also J2/J9 for external cap</td><td></td></tr>
+        <tr class="even"><td>12</td><td>C6</td><td>1</td><td>22uF 25V X5R</td><td>0805</td><td>Bulk cap RA-08 supply</td><td>—</td><td>22uF 25V 0805 X5R</td><td></td><td></td></tr>
+        <tr class="odd"><td>13</td><td>C7</td><td>1</td><td>10uF 25V</td><td>—</td><td>Bulk cap</td><td>—</td><td>10uF 25V</td><td></td><td></td></tr>
+        <tr class="even"><td>14</td><td>C18</td><td>1</td><td>10uF 16V</td><td>0603</td><td>Decoupling</td><td>—</td><td>10uF 16V 0603</td><td></td><td></td></tr>
+        <tr class="odd"><td>15</td><td>C2;C5</td><td>2</td><td>4.7uF 50V</td><td>0805</td><td>Power decoupling</td><td>—</td><td>4.7uF 50V 0805</td><td></td><td></td></tr>
+        <tr class="even"><td>16</td><td>C9;C17</td><td>2</td><td>1uF 50V</td><td>0603</td><td>Decoupling</td><td>—</td><td>1uF 50V 0603</td><td></td><td></td></tr>
+        <tr class="odd"><td>17</td><td>C8;C11;C12;C13;C14;C15;C16</td><td>7</td><td>0.1uF 50V</td><td>0603</td><td>Decoupling</td><td>—</td><td>0.1uF 50V 0603</td><td></td><td></td></tr>
+        <tr class="even"><td>18</td><td>C1</td><td>1</td><td>0.01uF 50V</td><td>0805</td><td>HF decoupling</td><td>—</td><td>0.01uF 50V 0805</td><td></td><td></td></tr>
+        <tr class="odd"><td>19</td><td>C10</td><td>1</td><td>0.01uF 50V</td><td>0603</td><td>HF decoupling</td><td>—</td><td>0.01uF 50V 0603</td><td></td><td></td></tr>
+        <tr class="even"><td>20</td><td>C4</td><td>1</td><td>10nF</td><td>0805</td><td>Filter/decoupling</td><td>—</td><td>10nF 0805</td><td></td><td></td></tr>
+        <tr class="odd"><td>21</td><td>R1;R2;R3;R4;R5;R6;R7;R10;R11;R12;R13;R14;R15;R16;R18;R19;R21;R22;R24;R25</td><td>20</td><td>10K</td><td>0603</td><td>Resistor</td><td>—</td><td>10K 0603</td><td></td><td></td></tr>
+        <tr class="even"><td>22</td><td>R8;R9</td><td>2</td><td>2K</td><td>0603</td><td>Resistor</td><td>—</td><td>2K 0603</td><td></td><td></td></tr>
+        <tr class="odd"><td>23</td><td>R17;R20;R23;R26</td><td>4</td><td>5.1K</td><td>0603</td><td>I2C pull-up / bias</td><td>—</td><td>5.1K 0603</td><td></td><td></td></tr>
+        <tr class="even"><td>24</td><td>ROV1;ROK1</td><td>2</td><td>5.62M</td><td>0805</td><td>BQ25505 divider resistor</td><td>—</td><td>5.62M 0805</td><td>Harvesting threshold programming</td><td></td></tr>
+        <tr class="odd"><td>25</td><td>ROK2</td><td>1</td><td>5.49M</td><td>0805</td><td>BQ25505 divider resistor</td><td>—</td><td>5.49M 0805</td><td></td><td></td></tr>
+        <tr class="even"><td>26</td><td>ROV2</td><td>1</td><td>7.32M</td><td>0805</td><td>BQ25505 OV resistor</td><td>—</td><td>7.32M 0805</td><td></td><td></td></tr>
+        <tr class="odd"><td>27</td><td>ROK3</td><td>1</td><td>1.87M</td><td>0805</td><td>BQ25505 OK resistor</td><td>—</td><td>1.87M 0805</td><td></td><td></td></tr>
+        <tr class="even"><td>28</td><td>Q1;Q2;Q3;Q4;Q7;Q8;Q10;Q12;Q14;Q16</td><td>10</td><td>SI2303CDS</td><td>SOT-23</td><td>N-channel MOSFET</td><td>Vishay/SI</td><td>SI2303CDS</td><td>Sensor/load switches</td><td><a href="datasheets/SI2303CDS.pdf" target="_blank" rel="noopener">SI2303CDS.pdf</a></td></tr>
+        <tr class="odd"><td>29</td><td>Q5;Q6</td><td>2</td><td>DMG3402L-7</td><td>SOT-23</td><td>P-channel MOSFET</td><td>Diodes Inc</td><td>DMG3402L-7</td><td>Power path switching</td><td><a href="datasheets/DMG3402L-7.pdf" target="_blank" rel="noopener">DMG3402L-7.pdf</a></td></tr>
+        <tr class="even"><td>30</td><td>Q11;Q13;Q15;Q17</td><td>4</td><td>MMBT2222A</td><td>SOT-23</td><td>NPN transistor</td><td>—</td><td>MMBT2222A</td><td>Low-side / enable drivers</td><td><a href="datasheets/MMBT2222A.pdf" target="_blank" rel="noopener">MMBT2222A.pdf</a></td></tr>
+        <tr class="odd"><td>31</td><td>J1</td><td>1</td><td>Header 2-pin 2.54mm XH 180</td><td>Solar connector</td><td>Solar panel input</td><td>—</td><td>2.54mm XH 180</td><td>Solar mounting hole nearby</td><td></td></tr>
+        <tr class="even"><td>32</td><td>J2;J9</td><td>2</td><td>Header 2-pin 2.54mm XH 180</td><td>Connector</td><td>Big capacitor connection</td><td>—</td><td>2.54mm XH 180</td><td></td><td></td></tr>
+        <tr class="odd"><td>33</td><td>J8</td><td>1</td><td>Header 2-pin 2.54mm XH 180</td><td>Connector</td><td>Rechargeable battery</td><td>—</td><td>2.54mm XH 180</td><td></td><td></td></tr>
+        <tr class="even"><td>34</td><td>J3;J5</td><td>2</td><td>Header 2-pin 2.54mm 180</td><td>Connector</td><td>FW load strap headers</td><td>—</td><td>2.54mm 180</td><td>Short during firmware programming</td><td></td></tr>
+        <tr class="odd"><td>35</td><td>J4;J7</td><td>2</td><td>Header 4-pin 2.54mm 180</td><td>Connector</td><td>Debug/firmware UART</td><td>—</td><td>2.54mm 180</td><td>J4 noted as firmware connector</td><td></td></tr>
+        <tr class="even"><td>36</td><td>—</td><td>1</td><td>Solar panel</td><td>External</td><td>Photovoltaic source</td><td>—</td><td>User-selected</td><td>Connect via J1; size for load/region</td><td></td></tr>
+        <tr class="odd"><td>37</td><td>—</td><td>1</td><td>Rechargeable battery</td><td>External</td><td>NiMH/Li-ion etc</td><td>—</td><td>User-selected</td><td>Connect via J8; optional if supercap only</td><td></td></tr>
+        <tr class="even"><td>38</td><td>—</td><td>1</td><td>Antenna</td><td>External</td><td>LoRa antenna 868/915 MHz</td><td>—</td><td>User-selected</td><td>Connect to MOD1 ANT</td><td></td></tr>
+        <tr class="odd"><td>39</td><td>—</td><td>1</td><td>PCB</td><td>A2</td><td>Printed circuit board</td><td>—</td><td>SolarSensor Rev2</td><td>Feb 2026 core design</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

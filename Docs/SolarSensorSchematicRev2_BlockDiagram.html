@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solar Sensor Schematic Rev2 - Block Diagram</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #222; }
+    .wrap { padding: 16px; max-width: 1400px; margin: 0 auto; }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    nav a {
+      padding: 8px 14px;
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      color: #1f3864;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    nav a.active {
+      background: #1f3864;
+      color: #fff;
+      border-color: #1f3864;
+    }
+    nav a:hover:not(.active) { background: #eef2f8; }
+    .note {
+      background: #fff;
+      border-left: 4px solid #1f3864;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    h2 {
+      font-size: 16px;
+      color: #1f3864;
+      margin: 24px 0 12px;
+    }
+    .diagram-panel {
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      padding: 16px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      margin-bottom: 16px;
+    }
+    th, td {
+      border: 1px solid #d9d9d9;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    tr.title th {
+      background: #1f3864;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      padding: 14px 10px;
+    }
+    tr.header th {
+      background: #1f3864;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+    }
+    tr.odd td { background: #fff; }
+    tr.even td { background: #f2f2f2; }
+    td.center { text-align: center; }
+    .footnote { font-size: 12px; color: #555; line-height: 1.6; }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis' } });
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="SolarSensorSchematicRev2_BOM.html">Bill of Materials</a>
+      <a href="SolarSensorSchematicRev2_BlockDiagram.html" class="active">Block Diagram</a>
+      <a href="SolarSensorSchematicRev2_Sensors.html">Sensors</a>
+      <a href="SolarSensorSchematicRev2_EnergyBudget.html">Energy Budget</a>
+      <a href="SolarSensorSchematicRev2_TODO.html">Firmware TODO</a>
+      <a href="SolarSensorSchematicRev2.pdf">Schematic PDF</a>
+      <a href="SolarSensorSchematicRev2_BOM.xlsx">Spreadsheet (.xlsx)</a>
+    </nav>
+
+    <div class="note">
+      Simplified functional view of <strong>Solar Sensor Schematic Rev2</strong> — power paths, rails, and RA-08 interfaces.
+      Load switches (MOSFETs Q1–Q16) gate sensor supplies; decoupling and programming headers are omitted for clarity.
+      Full detail: <a href="SolarSensorSchematicRev2.pdf">SolarSensorSchematicRev2.pdf</a>.
+    </div>
+
+    <h2>System Block Diagram</h2>
+    <div class="diagram-panel">
+      <pre class="mermaid">
+flowchart TB
+    subgraph EXT["External"]
+        SOLAR["Solar panel<br/>J1"]
+        ANT["LoRa antenna<br/>868 / 915 MHz"]
+        BAT["Battery<br/>J8 optional"]
+    end
+
+    subgraph PWR["Power"]
+        BQ["BQ25505 U2<br/>MPPT harvester"]
+        SCAP["0.22 F supercap<br/>C3 · J2/J9"]
+        BOOST["TPS613221A U1<br/>3.3 V boost"]
+        LDO["SGM2019 U4<br/>1.8 V LDO"]
+    end
+
+    subgraph MCU["Controller / radio"]
+        RA["RA-08 MOD1<br/>ASR6601 · LoRaWAN"]
+    end
+
+    subgraph SNS["Sensors"]
+        SHT["SHT40 U5/U7<br/>Temp · RH"]
+        SGP["SGP30 U3<br/>TVOC"]
+        CO2["STCC4 U6<br/>CO₂"]
+        LUX["BH1620 U8<br/>Lux analog"]
+    end
+
+    SOLAR --> BQ
+    BQ --> SCAP
+    BQ --> BAT
+    SCAP --> BOOST
+    BAT --> BOOST
+
+    BOOST -->|"3.3 V"| RA
+    BOOST -->|"3.3 V · CO2_EN PA5"| CO2
+    BOOST --> LDO
+    LDO -->|"1.8 V · HUM_EN PA6"| SHT
+    LDO -->|"1.8 V · TVOC_EN PA7"| SGP
+
+    RA -->|"I²C PA14/PA15"| SHT
+    RA -->|"I²C"| SGP
+    RA -->|"I²C"| CO2
+    RA -->|"ADC PA11"| LUX
+    RA -->|"ADC PA8 vcap"| SCAP
+    RA -->|"BH1620_EN PA12"| LUX
+    RA -->|"RF"| ANT
+
+    style RA fill:#1f3864,color:#fff
+    style BQ fill:#e8eef7,color:#000
+    style BOOST fill:#e8eef7,color:#000
+    style LDO fill:#e8eef7,color:#000
+      </pre>
+    </div>
+
+    <h2>Power Rails</h2>
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">Power Architecture</th></tr>
+        <tr class="header">
+          <th>Rail</th>
+          <th>Source</th>
+          <th>Loads</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd">
+          <td>Solar input</td>
+          <td>J1 panel</td>
+          <td>BQ25505 U2</td>
+          <td>MPPT energy harvester; 22 µH boost inductor L2</td>
+        </tr>
+        <tr class="even">
+          <td>Storage</td>
+          <td>BQ25505 VSTOR</td>
+          <td>0.22 F supercap C3, optional battery J8</td>
+          <td>Buffers LoRa TX bursts; external cap via J2/J9</td>
+        </tr>
+        <tr class="odd">
+          <td>3.3 V main</td>
+          <td>TPS613221A U1</td>
+          <td>RA-08 MOD1, STCC4 (switched)</td>
+          <td>Step-up from harvest/storage; 4.7 µH inductor L1</td>
+        </tr>
+        <tr class="even">
+          <td>1.8 V sensors</td>
+          <td>SGM2019 U4 LDO</td>
+          <td>SHT40, SGP30 (switched)</td>
+          <td>Derived from 3.3 V; gated by HUM_EN and TVOC_EN</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>RA-08 Interfaces</h2>
+    <table>
+      <thead>
+        <tr class="title"><th colspan="5">Signal Map (firmware: lora_config.h)</th></tr>
+        <tr class="header">
+          <th>Function</th>
+          <th>Pin</th>
+          <th>Interface</th>
+          <th>Target</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd">
+          <td>I²C clock / data</td>
+          <td class="center">PA14 / PA15</td>
+          <td>I²C</td>
+          <td>SHT40, SGP30, STCC4</td>
+          <td>Shared bus; 5.1 kΩ pull-ups on PCB</td>
+        </tr>
+        <tr class="even">
+          <td>HUM_EN</td>
+          <td class="center">PA6</td>
+          <td>GPIO → load switch</td>
+          <td>1.8 V rail → SHT40</td>
+          <td>Enable humidity sensor supply</td>
+        </tr>
+        <tr class="odd">
+          <td>TVOC_EN</td>
+          <td class="center">PA7</td>
+          <td>GPIO → load switch</td>
+          <td>1.8 V rail → SGP30</td>
+          <td>Optional TVOC section</td>
+        </tr>
+        <tr class="even">
+          <td>CO2_EN</td>
+          <td class="center">PA5</td>
+          <td>GPIO → load switch</td>
+          <td>3.3 V rail → STCC4</td>
+          <td>Hard power-off between samples</td>
+        </tr>
+        <tr class="odd">
+          <td>BH1620_EN</td>
+          <td class="center">PA12</td>
+          <td>GPIO → load switch</td>
+          <td>BH1620 light sensor</td>
+          <td>Analog current-output lux sensor</td>
+        </tr>
+        <tr class="even">
+          <td>Light ADC</td>
+          <td class="center">PA11</td>
+          <td>ADC ch 2</td>
+          <td>BH1620 via Rsense</td>
+          <td>Lux = (V/R) / µA-per-lux</td>
+        </tr>
+        <tr class="odd">
+          <td>Supercap monitor</td>
+          <td class="center">PA8</td>
+          <td>ADC ch 1</td>
+          <td>Storage voltage divider</td>
+          <td>Reported in LoRa payload bytes 10–11</td>
+        </tr>
+        <tr class="even">
+          <td>LoRa RF</td>
+          <td class="center">MOD1 ANT</td>
+          <td>RF</td>
+          <td>External antenna</td>
+          <td>868 / 915 MHz per region</td>
+        </tr>
+        <tr class="odd">
+          <td>Firmware UART</td>
+          <td class="center">J4 / J7</td>
+          <td>UART</td>
+          <td>Host / debugger</td>
+          <td>4-pin 2.54 mm headers; J3/J5 boot straps</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="footnote">
+      Block diagram source: <code>Docs/schematic_block_diagram.mmd</code>.
+      Simplified — omits individual MOSFETs (SI2303, DMG3402), bias resistors, and bulk decoupling.
+      Two SHT40 footprints (U5, U7) exist on PCB; populate one unless dual sensing is intended.
+    </p>
+  </div>
+</body>
+</html>
