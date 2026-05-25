@@ -38,6 +38,7 @@
       <a href="SolarSensorSchematicRev2_BlockDiagram.html">Block Diagram</a>
       <a href="SolarSensorSchematicRev2_Sensors.html">Sensors</a>
       <a href="SolarSensorSchematicRev2_EnergyBudget.html" class="active">Energy Budget</a>
+      <a href="SolarSensorSchematicRev2_SolarCells.html">Indoor Solar Cells</a>
       <a href="SolarSensorSchematicRev2_TODO.html">Firmware TODO</a>
       <a href="SolarSensorSchematicRev2.pdf">Schematic PDF</a>
       <a href="SolarSensorSchematicRev2_BOM.xlsx">Spreadsheet (.xlsx)</a>
@@ -63,7 +64,7 @@
 <tr class="even"><td class="">MCU active</td><td class="num">4.0 mA × 0.1 s</td><td class="num">Per LoRa report burst</td></tr>
 <tr class="odd"><td class="">Harvester efficiency</td><td class="num">0.75</td><td class="num">BQ25505 end-to-end</td></tr>
 <tr class="even"><td class="">Design margin</td><td class="num">1.3</td><td class="num">Aging / soiling</td></tr>
-<tr class="odd"><td class="">Panel</td><td class="num">16 cm² (40×40 mm)</td><td class="num">8 µW/cm² @ 200 lux</td></tr>
+<tr class="odd"><td class="">Panel</td><td class="num">36 cm² (60×60 mm)</td><td class="num">8 µW/cm² @ 200 lux</td></tr>
 </tbody></table>
 
     <table><thead><tr class="title"><th colspan="12">Sensor Configuration (per channel)</th></tr>
@@ -105,24 +106,40 @@
 <tr class="even"><td class="">Hard power-off CO2_EN</td><td class="num">1.50 mAs</td><td class="num">150.0 µA</td><td class="num">0.49 mW</td><td class="num">4.9 mJ</td><td class="num">Resets ASC; ~1 s boot + sample</td></tr>
 </tbody></table>
 
-    <h2>Indoor Solar — 40×40 mm Panel</h2>
+    <h2>Indoor Solar — 60×60 mm Panel</h2>
     <table><thead><tr class="title"><th colspan="3">Solar Sizing Summary</th></tr>
 <tr class="header"><th>Parameter</th><th>Value</th><th>Notes</th></tr></thead><tbody>
 <tr class="odd"><td class="">Required net power (+ margin)</td><td class="num">71 µW</td><td class="num">From budget summary total</td></tr>
 <tr class="even"><td class="">Required panel input</td><td class="num">94 µW</td><td class="num">Before BQ25505 losses</td></tr>
-<tr class="odd"><td class="">Break-even illuminance</td><td class="num">147 lux</td><td class="num">Amorton-class panel</td></tr>
-<tr class="even"><td class="">Comfortable illuminance</td><td class="num">294 lux</td><td class="num">~2× break-even</td></tr>
+<tr class="odd"><td class="">Break-even illuminance</td><td class="num">65 lux</td><td class="num">Amorton-class panel</td></tr>
+<tr class="even"><td class="">Comfortable illuminance</td><td class="num">131 lux</td><td class="num">~2× break-even</td></tr>
 </tbody></table>
 
     <table><thead><tr class="title"><th colspan="4">Panel Output vs Illuminance</th></tr>
 <tr class="header"><th>Illuminance</th><th>Panel output</th><th>Harvested (75%)</th><th>vs budget (71 µW)</th></tr></thead><tbody>
-<tr class="odd"><td class="">100 lux</td><td class="num">64 µW</td><td class="num">48 µW</td><td class="num">DEFICIT</td></tr>
-<tr class="even"><td class="">150 lux</td><td class="num">96 µW</td><td class="num">72 µW</td><td class="num">OK</td></tr>
-<tr class="odd"><td class="">200 lux</td><td class="num">128 µW</td><td class="num">96 µW</td><td class="num">OK</td></tr>
-<tr class="even"><td class="">250 lux</td><td class="num">160 µW</td><td class="num">120 µW</td><td class="num">OK</td></tr>
-<tr class="odd"><td class="">300 lux</td><td class="num">192 µW</td><td class="num">144 µW</td><td class="num">OK</td></tr>
-<tr class="even"><td class="">400 lux</td><td class="num">256 µW</td><td class="num">192 µW</td><td class="num">OK</td></tr>
-<tr class="odd"><td class="">500 lux</td><td class="num">320 µW</td><td class="num">240 µW</td><td class="num">OK</td></tr>
+<tr class="odd"><td class="">100 lux</td><td class="num">144 µW</td><td class="num">108 µW</td><td class="num">1.5×</td><td class="num">OK</td></tr>
+<tr class="even"><td class="">150 lux</td><td class="num">216 µW</td><td class="num">162 µW</td><td class="num">2.3×</td><td class="num">OK</td></tr>
+<tr class="odd"><td class="">200 lux</td><td class="num">288 µW</td><td class="num">216 µW</td><td class="num">3.1×</td><td class="num">OK</td></tr>
+<tr class="even"><td class="">500 lux</td><td class="num">720 µW</td><td class="num">540 µW</td><td class="num">7.6×</td><td class="num">OK</td></tr>
+<tr class="odd"><td class="">1000 lux</td><td class="num">1440 µW</td><td class="num">1080 µW</td><td class="num">15.3×</td><td class="num">OK</td></tr>
+</tbody></table>
+
+    <h2>Indoor Solar Cell Comparison @ 200 lux</h2>
+    <div class="note">
+      Published indoor PV modules scaled to <strong>60×60 mm (36 cm²)</strong>.
+      Full comparison @ 200 / 500 / 1000 lux:
+      <a href="SolarSensorSchematicRev2_SolarCells.html">Indoor Solar Cells</a> ·
+      <a href="SolarSensorSchematicRev2_BOM.xlsx">Indoor Solar Cells sheet</a>.
+    </div>
+    <table><thead><tr class="title"><th colspan="6">Harvested power vs load @ 200 lux</th></tr>
+<tr class="header"><th>Vendor</th><th>Part</th><th>Panel in</th><th>Harvested</th><th>vs budget (71 µW)</th><th>Status</th></tr></thead><tbody>
+<tr class="odd"><td class="">Dazheng (target)</td><td class="num">Flexible perovskite 60×60</td><td class="num">TBD</td><td class="num">—</td><td class="num">—</td><td class="num">TBD</td></tr>
+<tr class="even"><td class="">Epishine</td><td class="num">MultiCell (typ max)</td><td class="num">302 µW</td><td class="num">227 µW</td><td class="num">3.2×</td><td class="num">OK</td></tr>
+<tr class="odd"><td class="">Panasonic</td><td class="num">Amorton (flyer typ)</td><td class="num">288 µW</td><td class="num">216 µW</td><td class="num">3.1×</td><td class="num">OK</td></tr>
+<tr class="even"><td class="">Panasonic</td><td class="num">AMG-1401C</td><td class="num">248 µW</td><td class="num">186 µW</td><td class="num">2.6×</td><td class="num">OK</td></tr>
+<tr class="odd"><td class="">PowerFilm</td><td class="num">LL200-2.4-37</td><td class="num">124 µW</td><td class="num">93 µW</td><td class="num">1.3×</td><td class="num">OK</td></tr>
+<tr class="even"><td class="">RICOH</td><td class="num">EH DSSC5284a</td><td class="num">227 µW</td><td class="num">171 µW</td><td class="num">2.4×</td><td class="num">OK</td></tr>
+<tr class="odd"><td class="">Model</td><td class="num">Energy budget placeholder</td><td class="num">288 µW</td><td class="num">216 µW</td><td class="num">3.1×</td><td class="num">OK</td></tr>
 </tbody></table>
 
     <p class="footnote">

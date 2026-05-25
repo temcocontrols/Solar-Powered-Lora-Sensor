@@ -7,10 +7,17 @@ from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 from firmware_todo import docs_nav, update_workbook, write_todo_html
+from solar_cell_comparison import (
+    COMPARE_LUX,
+    all_cells,
+    build_catalog_rows,
+    build_summary_at_lux,
+)
 
 DOCS = Path(__file__).resolve().parent
 XLSX_PATH = DOCS / "SolarSensorSchematicRev2_BOM.xlsx"
 HTML_PATH = DOCS / "SolarSensorSchematicRev2_EnergyBudget.html"
+SOLAR_CELLS_HTML_PATH = DOCS / "SolarSensorSchematicRev2_SolarCells.html"
 FLOW_MMD_PATH = DOCS / "power_optimization_flow.mmd"
 FLOW_PNG_PATH = DOCS / "power_optimization_flow.png"
 AVG_MMD_PATH = DOCS / "averaging_n_samples_flow.mmd"
@@ -29,7 +36,7 @@ I_ACTIVE_MA = 4.0
 T_ACTIVE_S = 0.10
 HARVEST_EFF = 0.75
 MARGIN = 1.30
-PANEL_AREA_CM2 = 16
+PANEL_AREA_CM2 = 36  # 60×60 mm hybrid panel (Rev2 PCB used 16 cm² / 40×40 mm)
 PANEL_UW_CM2_REF = 8
 REF_LUX = 200
 
@@ -365,9 +372,9 @@ def write_xlsx():
         ("MCU active time", T_ACTIVE_S, "s", "Per LoRa report burst"),
         ("Harvester efficiency", HARVEST_EFF, "", "BQ25505 end-to-end"),
         ("Design margin", MARGIN, "", "Aging, soiling, tolerance"),
-        ("Panel area", PANEL_AREA_CM2, "cm²", "40 mm × 40 mm"),
-        ("Panel power density @ ref", PANEL_UW_CM2_REF, "µW/cm²", "Amorton-class @ ref lux"),
-        ("Reference illuminance", REF_LUX, "lux", "Indoor a-Si reference point"),
+        ("Panel area", PANEL_AREA_CM2, "cm²", "60×60 mm — Dazheng perovskite / indoor cell (vendor TBD)"),
+        ("Panel power density @ ref", PANEL_UW_CM2_REF, "µW/cm²", "Placeholder until vendor curve; Amorton-class @ 200 lux"),
+        ("Reference illuminance", REF_LUX, "lux", "Indoor model point; deploy range 200–1000 lux"),
     ]
     assump_start = r
     for label, val, unit, note in assumptions:
@@ -575,7 +582,7 @@ def write_xlsx():
         r += 1
     r += 1
 
-    _title(r, "Indoor Solar — 40×40 mm Panel", cols=4)
+    _title(r, "Indoor Solar — 60×60 mm Panel", cols=4)
     r += 1
     _header(r, ["Parameter", "Value", "Unit", "Notes"])
     r += 1
@@ -621,7 +628,160 @@ def write_xlsx():
         r += 1
 
     write_flowchart_sheet(wb)
+    write_solar_cells_sheet(wb, need_net_row=need_net_row, harvest_row=R_HARVEST)
     wb.save(XLSX_PATH)
+
+
+def write_solar_cells_sheet(wb, *, need_net_row: int, harvest_row: int) -> None:
+    if "Indoor Solar Cells" in wb.sheetnames:
+        del wb["Indoor Solar Cells"]
+    ws = wb.create_sheet("Indoor Solar Cells")
+
+    widths = {
+        "A": 14, "B": 22, "C": 18, "D": 16, "E": 12, "F": 14,
+        "G": 22, "H": 42, "I": 36,
+    }
+    for col, w in widths.items():
+        ws.column_dimensions[col].width = w
+
+    r = 1
+    title_row(ws, r, "Indoor Solar Cell Comparison — 60×60 mm (36 cm²) panel", cols=9)
+    r += 2
+    ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=9)
+    intro = ws.cell(
+        r,
+        1,
+        "Benchmark published indoor PV modules vs project load. Datasheets: datasheets/SolarCell/ · "
+        "Dazheng target has no public electrical PDF. Test conditions vary (lux, spectrum, temp).",
+    )
+    style_cell(intro, fill=TITLE_FILL)
+    r += 2
+
+    title_row(ws, r, f"Catalog @ {REF_LUX} lux (scaled to {PANEL_AREA_CM2:.0f} cm²)", cols=9)
+    r += 1
+    header_row(ws, r, [
+        "Vendor", "Part", "Technology", "Native / catalog size", "µW/cm² @ 200 lux",
+        "Panel in (µW)", "Voc note", "Datasheet", "Notes",
+    ])
+    r += 1
+    for row in build_catalog_rows(PANEL_AREA_CM2, PANEL_UW_CM2_REF):
+        for col, val in enumerate(row, 1):
+            cell = ws.cell(r, col, val.replace(" µW", "") if col == 6 and val.endswith(" µW") else val)
+            style_cell(cell, num_fmt="0.0" if col in (5, 6) and val not in ("—", "TBD") else None)
+        r += 1
+    r += 2
+
+    title_row(ws, r, "Load reference (from Energy Budget sheet)", cols=4)
+    r += 1
+    header_row(ws, r, ["Parameter", "Value", "Unit", "Notes"])
+    r += 1
+    ws.cell(r, 1, "Required net power (+ margin)")
+    ws.cell(r, 2, f"='Energy Budget'!B{need_net_row}")
+    ws.cell(r, 3, "µW")
+    ws.cell(r, 4, "Links to Energy Budget total × margin")
+    for c in range(1, 5):
+        style_cell(ws.cell(r, c), num_fmt="0.0" if c == 2 else None)
+    r += 1
+    ws.cell(r, 1, "Harvester efficiency")
+    ws.cell(r, 2, f"='Energy Budget'!$B${harvest_row}")
+    ws.cell(r, 3, "")
+    ws.cell(r, 4, "BQ25505 end-to-end")
+    for c in range(1, 5):
+        style_cell(ws.cell(r, c))
+    r += 2
+
+    for lux in COMPARE_LUX:
+        title_row(ws, r, f"@ {lux} lux — panel input, harvested, vs budget", cols=6)
+        r += 1
+        header_row(ws, r, [
+            "Vendor", "Part", "Panel in (µW)", "Harvested (µW)", "vs budget", "Status",
+        ])
+        r += 1
+        for cell in all_cells(PANEL_UW_CM2_REF):
+            ws.cell(r, 1, cell.vendor)
+            ws.cell(r, 2, cell.part)
+            pin = cell.panel_in_uw(lux, PANEL_AREA_CM2)
+            if pin is None:
+                ws.cell(r, 3, "TBD")
+                ws.cell(r, 4, "—")
+                ws.cell(r, 5, "—")
+                ws.cell(r, 6, "TBD")
+            else:
+                ws.cell(r, 3, pin)
+                ws.cell(r, 4, f"=C{r}*'Energy Budget'!$B${harvest_row}")
+                ws.cell(r, 5, f"=D{r}/'Energy Budget'!$B${need_net_row}")
+                ws.cell(r, 6, f'=IF(D{r}>=\'Energy Budget\'!$B${need_net_row},"OK","DEFICIT")')
+            for c in range(1, 7):
+                style_cell(ws.cell(r, c), num_fmt="0.0" if c in (3, 4, 5) and pin is not None else None)
+            r += 1
+        r += 1
+
+    ws.freeze_panes = "A4"
+
+
+def write_solar_cells_html(need_net_uw: float) -> None:
+    catalog_rows = []
+    for row in build_catalog_rows(PANEL_AREA_CM2, PANEL_UW_CM2_REF):
+        vendor, part, tech, size, dens, pin, voc, ds, notes = row
+        ds_link = (
+            f'<a href="{html_mod.escape(ds)}">{html_mod.escape(Path(ds).name if "/" in ds else ds)}</a>'
+            if ds and not ds.endswith(".md")
+            else f'<a href="{html_mod.escape(ds)}">{html_mod.escape(ds)}</a>'
+        )
+        catalog_rows.append([vendor, part, tech, size, dens, pin, voc, ds_link, notes])
+
+    lux_sections = []
+    for lux in COMPARE_LUX:
+        rows = []
+        for vendor, part, pin_s, ph_s, ratio_s in build_summary_at_lux(
+            lux, need_net_uw, HARVEST_EFF, PANEL_AREA_CM2, PANEL_UW_CM2_REF
+        ):
+            if pin_s == "TBD":
+                rows.append([vendor, part, "TBD", "—", "—", "TBD"])
+            else:
+                ph = float(ph_s.replace(" µW", ""))
+                status = "OK" if ph >= need_net_uw else "DEFICIT"
+                rows.append([vendor, part, pin_s, ph_s, ratio_s, status])
+        lux_sections.append(
+            table_html(
+                f"@ {lux} lux (60×60 mm panel, {HARVEST_EFF:.0%} harvest)",
+                ["Vendor", "Part", "Panel in", "Harvested", f"vs budget ({fmt_uw(need_net_uw)})", "Status"],
+                rows,
+            )
+        )
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solar Sensor Schematic Rev2 - Indoor Solar Cells</title>
+  <style>{CSS}</style>
+</head>
+<body>
+  <div class="wrap">
+    {docs_nav("SolarSensorSchematicRev2_SolarCells.html")}
+    <div class="note">
+      Comparison of published <strong>indoor / low-light</strong> PV modules for the
+      <strong>60×60 mm (36 cm²)</strong> panel target. Full datasheet library:
+      <a href="datasheets/SolarCell/INDOOR_SOLAR_CELLS_README.md">INDOOR_SOLAR_CELLS_README.md</a>.
+      Project spec: <a href="INDOOR_SOLAR_PANEL_SPEC.md">INDOOR_SOLAR_PANEL_SPEC.md</a>.
+    </div>
+    {table_html(
+        f"Catalog @ {REF_LUX} lux (scaled to {PANEL_AREA_CM2:.0f} cm²)",
+        ["Vendor", "Part", "Technology", "Size", "µW/cm² @ 200", "Panel in @ 200", "Voc", "Datasheet", "Notes"],
+        catalog_rows,
+        colspan=9,
+    )}
+    {"".join(lux_sections)}
+    <p class="footnote">
+      Linear lux scaling assumed unless vendor provides a curve. Ricoh Voc 5.4 V may exceed BQ25505 Vin max (5.1 V).
+      Regenerate with <code>python Docs/build_energy_budget_sheet.py</code>.
+    </p>
+  </div>
+</body>
+</html>"""
+    SOLAR_CELLS_HTML_PATH.write_text(html, encoding="utf-8")
 
 
 
@@ -687,7 +847,7 @@ def write_html():
         ("MCU active", f"{I_ACTIVE_MA} mA × {T_ACTIVE_S} s", "Per LoRa report burst"),
         ("Harvester efficiency", str(HARVEST_EFF), "BQ25505 end-to-end"),
         ("Design margin", str(MARGIN), "Aging / soiling"),
-        ("Panel", f"{PANEL_AREA_CM2} cm² (40×40 mm)", f"{PANEL_UW_CM2_REF} µW/cm² @ {REF_LUX} lux"),
+        ("Panel", f"{PANEL_AREA_CM2} cm² (60×60 mm)", f"{PANEL_UW_CM2_REF} µW/cm² @ {REF_LUX} lux"),
     ]
 
     sensor_cfg_rows = []
@@ -730,10 +890,22 @@ def write_html():
         co2_10_rows.append([name, fmt_charge(ch), fmt_uA(i_uA), fmt_mw(p_mw), fmt_energy_mj(e_mj), note])
 
     lux_rows = []
-    for lux in [100, 150, 200, 250, 300, 400, 500]:
+    for lux in [100, 150, 200, 500, 1000]:
         pin, ph = panel_harvest(lux)
+        ratio = ph / m["need_net_uw"] if m["need_net_uw"] else 0
         status = "OK" if ph >= m["need_net_uw"] else "DEFICIT"
-        lux_rows.append([f"{lux} lux", fmt_uw(pin), fmt_uw(ph), status])
+        lux_rows.append([f"{lux} lux", fmt_uw(pin), fmt_uw(ph), f"{ratio:.1f}×", status])
+
+    solar_cell_rows = []
+    for vendor, part, pin_s, ph_s, ratio_s in build_summary_at_lux(
+        200, m["need_net_uw"], HARVEST_EFF, PANEL_AREA_CM2, PANEL_UW_CM2_REF
+    ):
+        if pin_s == "TBD":
+            solar_cell_rows.append([vendor, part, "TBD", "—", "—", "TBD"])
+        else:
+            ph = float(ph_s.replace(" µW", ""))
+            status = "OK" if ph >= m["need_net_uw"] else "DEFICIT"
+            solar_cell_rows.append([vendor, part, pin_s, ph_s, ratio_s, status])
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -782,7 +954,7 @@ def write_html():
         "Option", "CO₂ charge", "Avg CO₂ I", "Avg power", "Energy", "Notes",
     ], co2_10_rows)}
 
-    <h2>Indoor Solar — 40×40 mm Panel</h2>
+    <h2>Indoor Solar — 60×60 mm Panel</h2>
     {table_html("Solar Sizing Summary", ["Parameter", "Value", "Notes"], [
         ["Required net power (+ margin)", fmt_uw(m["need_net_uw"]), "From budget summary total"],
         ["Required panel input", fmt_uw(m["need_in_uw"]), "Before BQ25505 losses"],
@@ -791,6 +963,19 @@ def write_html():
     ])}
 
     {table_html("Panel Output vs Illuminance", ["Illuminance", "Panel output", "Harvested (75%)", f"vs budget ({fmt_uw(m['need_net_uw'])})"], lux_rows)}
+
+    <h2>Indoor Solar Cell Comparison @ 200 lux</h2>
+    <div class="note">
+      Published indoor PV modules scaled to <strong>60×60 mm (36 cm²)</strong>.
+      Full comparison @ 200 / 500 / 1000 lux:
+      <a href="SolarSensorSchematicRev2_SolarCells.html">Indoor Solar Cells</a> ·
+      <a href="SolarSensorSchematicRev2_BOM.xlsx">Indoor Solar Cells sheet</a>.
+    </div>
+    {table_html(
+        "Harvested power vs load @ 200 lux",
+        ["Vendor", "Part", "Panel in", "Harvested", f"vs budget ({fmt_uw(m['need_net_uw'])})", "Status"],
+        solar_cell_rows,
+    )}
 
     <p class="footnote">
       Filtering uses the arithmetic mean of the last N raw readings per channel (N typically {FILTER_N_TYPICAL}, default {FILTER_N_DEFAULT}).
@@ -807,8 +992,11 @@ def write_html():
 
 if __name__ == "__main__":
     write_xlsx()
+    m = build_model(BUDGET_PERIOD_S)
     write_html()
+    write_solar_cells_html(m["need_net_uw"])
     update_workbook()
     write_todo_html()
     print(f"Updated {XLSX_PATH}")
     print(f"Wrote {HTML_PATH}")
+    print(f"Wrote {SOLAR_CELLS_HTML_PATH}")

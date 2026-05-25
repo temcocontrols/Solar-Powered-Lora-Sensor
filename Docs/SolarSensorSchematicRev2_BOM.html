@@ -79,6 +79,7 @@
       <a href="SolarSensorSchematicRev2_BlockDiagram.html">Block Diagram</a>
       <a href="SolarSensorSchematicRev2_Sensors.html">Sensors</a>
       <a href="SolarSensorSchematicRev2_EnergyBudget.html">Energy Budget</a>
+      <a href="SolarSensorSchematicRev2_SolarCells.html">Indoor Solar Cells</a>
       <a href="SolarSensorSchematicRev2_TODO.html">Firmware TODO</a>
       <a href="SolarSensorSchematicRev2.pdf">Schematic PDF</a>
       <a href="SolarSensorSchematicRev2_BOM.xlsx">Spreadsheet (.xlsx)</a>
@@ -114,9 +115,9 @@
         <tr class="odd"><td>21</td><td>R1;R2;R3;R4;R5;R6;R7;R10;R11;R12;R13;R14;R15;R16;R18;R19;R21;R22;R24;R25</td><td>20</td><td>10K</td><td>0603</td><td>Resistor</td><td>—</td><td>10K 0603</td><td></td><td></td></tr>
         <tr class="even"><td>22</td><td>R8;R9</td><td>2</td><td>2K</td><td>0603</td><td>Resistor</td><td>—</td><td>2K 0603</td><td></td><td></td></tr>
         <tr class="odd"><td>23</td><td>R17;R20;R23;R26</td><td>4</td><td>5.1K</td><td>0603</td><td>I2C pull-up / bias</td><td>—</td><td>5.1K 0603</td><td></td><td></td></tr>
-        <tr class="even"><td>24</td><td>ROV1;ROK1</td><td>2</td><td>5.62M</td><td>0805</td><td>BQ25505 divider resistor</td><td>—</td><td>5.62M 0805</td><td>Harvesting threshold programming</td><td></td></tr>
+        <tr class="even"><td>24</td><td>ROV1;ROK1</td><td>2</td><td>5.62M</td><td>0805</td><td>BQ25505 divider resistor</td><td>—</td><td>5.62M 0805</td><td>Rev2 OVP network; hybrid 3.8V LIC: ROV1=4.02M — see BQ25505_DESIGN_INPUTS.md</td><td></td></tr>
         <tr class="odd"><td>25</td><td>ROK2</td><td>1</td><td>5.49M</td><td>0805</td><td>BQ25505 divider resistor</td><td>—</td><td>5.49M 0805</td><td></td><td></td></tr>
-        <tr class="even"><td>26</td><td>ROV2</td><td>1</td><td>7.32M</td><td>0805</td><td>BQ25505 OV resistor</td><td>—</td><td>7.32M 0805</td><td></td><td></td></tr>
+        <tr class="even"><td>26</td><td>ROV2</td><td>1</td><td>7.32M</td><td>0805</td><td>BQ25505 OV resistor</td><td>—</td><td>7.32M 0805</td><td>Rev2 OVP network; hybrid 3.8V LIC: ROV2=4.42M</td><td></td></tr>
         <tr class="odd"><td>27</td><td>ROK3</td><td>1</td><td>1.87M</td><td>0805</td><td>BQ25505 OK resistor</td><td>—</td><td>1.87M 0805</td><td></td><td></td></tr>
         <tr class="even"><td>28</td><td>Q1;Q2;Q3;Q4;Q7;Q8;Q10;Q12;Q14;Q16</td><td>10</td><td>SI2303CDS</td><td>SOT-23</td><td>N-channel MOSFET</td><td>Vishay/SI</td><td>SI2303CDS</td><td>Sensor/load switches</td><td><a href="datasheets/SI2303CDS.pdf" target="_blank" rel="noopener">SI2303CDS.pdf</a></td></tr>
         <tr class="odd"><td>29</td><td>Q5;Q6</td><td>2</td><td>DMG3402L-7</td><td>SOT-23</td><td>P-channel MOSFET</td><td>Diodes Inc</td><td>DMG3402L-7</td><td>Power path switching</td><td><a href="datasheets/DMG3402L-7.pdf" target="_blank" rel="noopener">DMG3402L-7.pdf</a></td></tr>

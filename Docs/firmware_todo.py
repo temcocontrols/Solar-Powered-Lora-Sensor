@@ -60,7 +60,8 @@ FIRMWARE_TODO: list[tuple[str, ...]] = [
         "Power",
         "Define supercap voltage thresholds on the bench",
         "No VCAP_MIN_* or charge target in code.",
-        "Measure droop during LoRa TX and sensor bursts. Set VCAP_MIN_TX_mV, VCAP_MIN_SENSORS_mV, VCAP_CHARGE_TARGET_mV in lora_config.h.",
+        "Measure droop during LoRa TX and sensor bursts. Starting points from BQ25505_DESIGN_INPUTS.md: "
+        "VCAP_MIN_SENSORS_mV=2700, VCAP_MIN_TX_mV=3000, VCAP_CHARGE_TARGET_mV=3600. Tune on bench.",
         "lora_config.h · adc_monitor.c",
         "Open",
     ),
@@ -240,6 +241,7 @@ def docs_nav(active: str = "") -> str:
         ("SolarSensorSchematicRev2_BlockDiagram.html", "Block Diagram"),
         ("SolarSensorSchematicRev2_Sensors.html", "Sensors"),
         ("SolarSensorSchematicRev2_EnergyBudget.html", "Energy Budget"),
+        ("SolarSensorSchematicRev2_SolarCells.html", "Indoor Solar Cells"),
         ("SolarSensorSchematicRev2_TODO.html", "Firmware TODO"),
         ("SolarSensorSchematicRev2.pdf", "Schematic PDF"),
         ("SolarSensorSchematicRev2_BOM.xlsx", "Spreadsheet (.xlsx)"),

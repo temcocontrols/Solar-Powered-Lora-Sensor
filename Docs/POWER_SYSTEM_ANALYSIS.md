@@ -79,9 +79,34 @@ Reporting storage voltage in LoRa without gating is **telemetry only**, not powe
 
 ---
 
+## BQ25505 thresholds (hybrid — SLUC484)
+
+Rev2 PCB ROV dividers target **~4.18 V OVP** (Li-ion class). **100 F · 3.8 V LIC** requires new ROV values on the next PCB spin:
+
+| Network | Rev2 PCB | Hybrid (recommended) | Computed voltage |
+|---------|----------|----------------------|------------------|
+| ROV1 / ROV2 | 5.62 / 7.32 MΩ | **4.02 / 4.42 MΩ** | **VBAT_OV ≈ 3.81 V** |
+| ROK1 / ROK2 / ROK3 | 5.62 / 5.49 / 1.87 MΩ | (unchanged) | **VBAT_OK ≈ 2.39 V**, **HYST ≈ 2.80 V** |
+
+Suggested firmware ADC thresholds (via **ADC_MONITOR**, 10 kΩ / 10 kΩ divider):
+
+| Constant | mV | Purpose |
+|----------|-----|---------|
+| `VCAP_MIN_SENSORS_mV` | 2700 | Enable radar / CO₂ P-FETs |
+| `VCAP_MIN_TX_mV` | 3000 | LoRa TX |
+| `VCAP_CHARGE_TARGET_mV` | 3600 | Full operating headroom |
+
+Detail: [BQ25505_DESIGN_INPUTS.md](BQ25505_DESIGN_INPUTS.md)
+
+---
+
 ## References
 
 - `Docs/pics/BlockDiagram.jpg` — authoritative diagram
 - `Docs/schematic_block_diagram.mmd` — simplified flow
 - `Docs/datasheets/BQ25505.pdf`
+- `Docs/BQ25505_DESIGN_INPUTS.md` — calculator inputs, ROV fix, firmware thresholds
+- `Docs/tools/SLUC484/SolarSensor_BQ25505_Calculator.xlsx` — TI threshold design (hybrid values)
+- `Docs/tools/SLUC463/SolarSensor_solar_load_study.xlsx` — solar load / panel sizing
+- `Docs/tools/README.md` — local tool index
 - `Docs/SolarSensorSchematicRev2.pdf` — Rev2 PCB (legacy detail)
