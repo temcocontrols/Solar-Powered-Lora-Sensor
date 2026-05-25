@@ -18,20 +18,20 @@ FIRMWARE_TODO: list[tuple[str, ...]] = [
         "FW-001",
         "P0",
         "Pinout",
-        "Assign BQ_EN to an RA-08 GPIO",
-        "BQ_EN exists on the schematic; firmware never drives it.",
-        "Confirm which RA-08 pin connects to BQ_EN and the active level. Add CONFIG_BQ_EN_* to lora_config.h.",
-        "lora_config.h · schematic Rev2",
+        "Assign ADC_MONITOR and status inputs on RAK3172",
+        "Hybrid block diagram defines ADC_MONITOR, VBAT_OK, BAT_GD, PRIM_STATUS; not wired in legacy RA-08 firmware.",
+        "Map each net to RAK3172 GPIO/ADC in lora_config.h. Confirm divider ratio for 100 F · 3.8 V supercap.",
+        "lora_config.h · hybrid PCB",
         "Open",
     ),
     (
         "FW-002",
         "P0",
         "Pinout",
-        "Assign VBAT_OK to an RA-08 GPIO",
-        "BQ25505 OK output is not read in firmware.",
-        "Confirm VBAT_OK pin and polarity. Add CONFIG_VBAT_OK_* to lora_config.h.",
-        "lora_config.h · schematic Rev2",
+        "Assign GPIO_RADAR and GPIO_CO2 P-FET gates",
+        "Radar and CO₂ use Si2301 P-FET gates; legacy firmware uses different RA-08 enables.",
+        "Map GPIO_RADAR and GPIO_CO2 to RAK3172 outputs. Active level per hybrid schematic.",
+        "lora_config.h · hybrid PCB",
         "Open",
     ),
     (
@@ -48,9 +48,9 @@ FIRMWARE_TODO: list[tuple[str, ...]] = [
         "FW-004",
         "P0",
         "Power",
-        "Drive BQ_EN during charge-only boot",
-        "Harvester enable is floating or default; 0.22 F supercap may never charge correctly.",
-        "Assert BQ_EN after first MCU wake. Keep all sensor enables off until vcap reaches target.",
+        "Drive hybrid charge / path policy during boot",
+        "Harvester uses internal OR logic; firmware must not load gated sensors on flat 100 F supercap.",
+        "Implement charge-only boot: SHT41 only until ADC_MONITOR threshold; defer radar/CO₂ and LoRa TX.",
         "power_manager.c · lora_driver.c",
         "Open",
     ),
@@ -280,9 +280,8 @@ def write_todo_sheet(wb) -> None:
     intro = ws.cell(
         r,
         1,
-        "Hardware supports automatic solar bring-up (BQ_EN, VBAT_OK, 0.22 F supercap). "
-        "Current lora_myself_net firmware does not. Close every open task before calling firmware Rev2-ready. "
-        "Detail: FIRMWARE_NEXT_STEPS.md · POWER_SYSTEM_ANALYSIS.md",
+        "Hardware supports hybrid bring-up (BQ25505 OR paths, 100 F LIC supercap, P-FET sensor gates). "
+        "Block diagram: pics/BlockDiagram.jpg · FIRMWARE_NEXT_STEPS.md · POWER_SYSTEM_ANALYSIS.md",
     )
     _style_cell(intro, fill=TITLE_FILL)
     r += 2
@@ -366,9 +365,8 @@ def write_todo_html() -> None:
     {docs_nav("SolarSensorSchematicRev2_TODO.html")}
     <div class="note">
       <strong>{open_count} open tasks.</strong>
-      The schematic includes BQ_EN, VBAT_OK, and a 0.22 F supercap so the node can start from a discharged state with no customer intervention.
-      Reporting <code>vcap</code> in the LoRa payload is not power management.
-      Close every P0 task before ship.
+      The hybrid block diagram (100 F supercap, TPS61291, RAK3172, P-FET sensor gates) defines the target architecture.
+      Legacy RA-08 Rev2 firmware does not implement it. Close every P0 task before ship.
       Markdown detail: <a href="FIRMWARE_NEXT_STEPS.md">FIRMWARE_NEXT_STEPS.md</a> ·
       <a href="POWER_SYSTEM_ANALYSIS.md">POWER_SYSTEM_ANALYSIS.md</a> ·
       spreadsheet tab <strong>Firmware TODO</strong>.

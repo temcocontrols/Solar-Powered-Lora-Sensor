@@ -1,6 +1,37 @@
-# Solar RA-08 Sensor Nodes
+# Solar-Powered LoRa Sensor
 
-## Project Overview
+Solar-powered LoRa sensor nodes with hybrid energy harvesting (BQ25505), supercap storage, and gated sensor loads.
+
+## Documentation
+
+Open locally:
+
+```powershell
+python -m http.server 8877 --bind 127.0.0.1 --directory Docs
+```
+
+| Page | Description |
+|------|-------------|
+| [Block Diagram](Docs/SolarSensorSchematicRev2_BlockDiagram.html) | **Hybrid power & control** (authoritative architecture) |
+| [Firmware TODO](Docs/SolarSensorSchematicRev2_TODO.html) | Numbered firmware backlog FW-001–FW-020 |
+| [BOM](Docs/SolarSensorSchematicRev2_BOM.html) | Rev2 PCB bill of materials |
+| [Sensors](Docs/SolarSensorSchematicRev2_Sensors.html) | Rev2 sensor timing & flowcharts |
+| [Energy Budget](Docs/SolarSensorSchematicRev2_EnergyBudget.html) | Rev2 power budget worksheet |
+
+Regenerate:
+
+```powershell
+python Docs/build_block_diagram.py
+python Docs/build_bom.py
+python Docs/build_energy_budget_sheet.py
+python Docs/firmware_todo.py
+```
+
+Markdown: `Docs/POWER_SYSTEM_ANALYSIS.md`, `Docs/FIRMWARE_NEXT_STEPS.md`
+
+---
+
+## Legacy firmware (RA-08 / Rev2 PCB)
 
 This project demonstrates solar-powered RA-08 sensor nodes using either SHT3x or SHT40 sensors.  
 Each node samples temperature and humidity, then reports the data to an RA-08 gateway over LoRa.

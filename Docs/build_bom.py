@@ -197,11 +197,15 @@ def write_html(rows: list[list[str]]) -> None:
       border-color: #1f3864;
     }}
     nav a:hover:not(.active) {{ background: #eef2f8; }}
+    .legacy {{ background: #fff8e6; border-left: 4px solid #e69138; padding: 10px 14px; margin-bottom: 16px;
+      font-size: 13px; line-height: 1.5; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }}
   </style>
 </head>
 <body>
   <div class="wrap">
     {docs_nav("SolarSensorSchematicRev2_BOM.html")}
+    <div class="legacy"><strong>Rev2 PCB BOM.</strong> System architecture reference:
+    <a href="SolarSensorSchematicRev2_BlockDiagram.html">Hybrid block diagram</a> (RAK3172 · 100 F · TPS61291).</div>
     <table>
       <thead>
         <tr class="title"><th colspan="{len(HEADERS)}">Solar Sensor Schematic Rev2 - Bill of Materials</th></tr>
