@@ -17,6 +17,7 @@
 #include "stcc4.h"
 #include "sgp30.h"
 #include "bh1620.h"
+#include "lora_config.h"
 #include "lora_protocol.h"
 
 #ifdef CONFIG_GATEWAY
@@ -27,9 +28,8 @@
 
 #define FW_DEBUG_VERSION "join-debug-v20260416-1"
 
-/* Keep node in run mode while debugging sensor and radio stability.
- * STOP3 can suppress UART output and may miss expected wake sources in this app. */
-#define NODE_STOP3_ENABLE 0
+#define NODE_STOP3_ENABLE CONFIG_NODE_STOP3_ENABLE
+#define NODE_REPORT_INTERVAL_MS CONFIG_NODE_REPORT_INTERVAL_MS
 
 /* checksum helper moved to lora_protocol.h (lora_simple_checksum) */
 
@@ -42,9 +42,10 @@ static int blink_led_state = 0;
 static TimerTime_t node_last_report_at = 0;
 static TimerTime_t node_last_loop_at = 0;
 static TimerTime_t node_tx_started_at = 0;
+static TimerEvent_t node_report_timer;
 static uint32_t node_lp_enter_count = 0;
 static uint32_t node_lp_wakeup_count = 0;
-static bool node_report_due_immediately = false;
+static volatile bool node_report_due_immediately = false;
 #endif
 
 uint8_t SLAVE1_ADDR = 0x00; // 本地地址默认为0
@@ -166,6 +167,17 @@ static void node_radio_clear_stale_irq_before_tx(void)
 {
     Radio.IrqProcess();
     State = LORA_IDLE;
+}
+
+static void node_report_timer_cb(void)
+{
+    node_report_due_immediately = true;
+}
+
+static void node_schedule_next_report(void)
+{
+    TimerSetValue(&node_report_timer, NODE_REPORT_INTERVAL_MS);
+    TimerStart(&node_report_timer);
 }
 #endif
 
@@ -447,6 +459,7 @@ static void node_send_sensor_report(const char *reason)
         printf("[NODE] %s direct report deferred sendMsgFlag=%d state=%d\r\n", reason, sendMsgFlag, State);
         /* Avoid tight-loop sensor polling when TX path is busy. */
         node_last_report_at = TimerGetCurrentTime();
+        node_schedule_next_report();
         return;
     }
 
@@ -541,6 +554,7 @@ static void node_send_sensor_report(const char *reason)
     Radio.Send(pkt, sizeof(pkt));
     printf("[NODE] tx submit return\r\n");
     node_last_report_at = TimerGetCurrentTime();
+    node_schedule_next_report();
 }
 #endif
 
@@ -697,6 +711,7 @@ int Ra08KitLoraTestStart(void)
         node_report_due_immediately = true;
         node_last_report_at = TimerGetCurrentTime();
         node_last_loop_at = TimerGetCurrentTime();
+        TimerInit(&node_report_timer, node_report_timer_cb);
         State = LORA_IDLE;
         Radio.Sleep();
         printf("[NODE] radio initialized, TX-only direct sensor reporting enabled\r\n");
@@ -1049,10 +1064,8 @@ int Ra08KitLoraTestStart(void)
         // Process Radio IRQ
         Radio.IrqProcess();
 
-        /* Periodic SHT3x read and send (node only). Uses a simple software timer
-         * paced by a short delay to avoid busy-looping. Interval ~10s. */
+        /* Periodic sensor report (node only). RTC timer wakes STOP3 between reports. */
 #ifndef CONFIG_GATEWAY
-        const TimerTime_t sht_interval_ms = 10000;
         TimerTime_t loop_elapsed_ms = TimerGetElapsedTime(node_last_loop_at);
         if (loop_elapsed_ms == 0) {
             loop_elapsed_ms = 1;
@@ -1060,9 +1073,11 @@ int Ra08KitLoraTestStart(void)
         node_last_loop_at = TimerGetCurrentTime();
 
         if (node_report_due_immediately) {
+            const char *report_reason;
             node_report_due_immediately = false;
-            node_send_sensor_report("startup");
-        } else if (TimerGetElapsedTime(node_last_report_at) >= sht_interval_ms) {
+            report_reason = (TimerGetElapsedTime(node_last_report_at) >= NODE_REPORT_INTERVAL_MS) ? "periodic" : "startup";
+            node_send_sensor_report(report_reason);
+        } else if (TimerGetElapsedTime(node_last_report_at) >= NODE_REPORT_INTERVAL_MS) {
             node_send_sensor_report("periodic");
         }
 
