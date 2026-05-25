@@ -105,8 +105,15 @@ Detail: [BQ25505_DESIGN_INPUTS.md](BQ25505_DESIGN_INPUTS.md)
 - `Docs/pics/BlockDiagram.jpg` — authoritative diagram
 - `Docs/schematic_block_diagram.mmd` — simplified flow
 - `Docs/datasheets/BQ25505.pdf`
+<<<<<<< Updated upstream
 - `Docs/BQ25505_DESIGN_INPUTS.md` — calculator inputs, ROV fix, firmware thresholds
 - `Docs/tools/SLUC484/SolarSensor_BQ25505_Calculator.xlsx` — TI threshold design (hybrid values)
 - `Docs/tools/SLUC463/SolarSensor_solar_load_study.xlsx` — solar load / panel sizing
 - `Docs/tools/README.md` — local tool index
+=======
+- `Docs/BQ25505_DESIGN_INPUTS.md` — calculator inputs and BOM divider values
+- `Docs/tools/SLUC484/SolarSensor_BQ25505_Calculator.xlsx` — TI SLUC484 threshold design (project pre-fill)
+- `Docs/tools/SLUC463/bq25505SolarAppDesignExample_V1p3.xlsx` — TI solar load / panel sizing example
+- `Docs/tools/README.md` — local tool index (WEBENCH is TPS61291 only, not BQ25505)
+>>>>>>> Stashed changes
 - `Docs/SolarSensorSchematicRev2.pdf` — Rev2 PCB (legacy detail)
