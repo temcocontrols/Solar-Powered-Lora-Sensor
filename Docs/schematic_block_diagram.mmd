@@ -1,0 +1,49 @@
+flowchart TB
+    subgraph EXT["External"]
+        SOLAR["Solar panel<br/>J1"]
+        ANT["LoRa antenna<br/>868 / 915 MHz"]
+        BAT["Battery<br/>J8 optional"]
+    end
+
+    subgraph PWR["Power"]
+        BQ["BQ25505 U2<br/>MPPT harvester"]
+        SCAP["0.22 F supercap<br/>C3 · J2/J9"]
+        BOOST["TPS613221A U1<br/>3.3 V boost"]
+        LDO["SGM2019 U4<br/>1.8 V LDO"]
+    end
+
+    subgraph MCU["Controller / radio"]
+        RA["RA-08 MOD1<br/>ASR6601 · LoRaWAN"]
+    end
+
+    subgraph SNS["Sensors"]
+        SHT["SHT40 U5/U7<br/>Temp · RH"]
+        SGP["SGP30 U3<br/>TVOC"]
+        CO2["STCC4 U6<br/>CO₂"]
+        LUX["BH1620 U8<br/>Lux analog"]
+    end
+
+    SOLAR --> BQ
+    BQ --> SCAP
+    BQ --> BAT
+    SCAP --> BOOST
+    BAT --> BOOST
+
+    BOOST -->|"3.3 V"| RA
+    BOOST -->|"3.3 V · CO2_EN PA5"| CO2
+    BOOST --> LDO
+    LDO -->|"1.8 V · HUM_EN PA6"| SHT
+    LDO -->|"1.8 V · TVOC_EN PA7"| SGP
+
+    RA -->|"I²C PA14/PA15"| SHT
+    RA -->|"I²C"| SGP
+    RA -->|"I²C"| CO2
+    RA -->|"ADC PA11"| LUX
+    RA -->|"ADC PA8 vcap"| SCAP
+    RA -->|"BH1620_EN PA12"| LUX
+    RA -->|"RF"| ANT
+
+    style RA fill:#1f3864,color:#fff
+    style BQ fill:#e8eef7,color:#000
+    style BOOST fill:#e8eef7,color:#000
+    style LDO fill:#e8eef7,color:#000

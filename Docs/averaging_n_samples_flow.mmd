@@ -1,0 +1,33 @@
+flowchart TD
+    A([Report cycle — raw sensor reads complete]) --> B[For each channel:<br/>T · RH · TVOC · lux · CO₂]
+
+    B --> C["Ring buffer per channel<br/>buf[0..N-1]  ·  N = filter depth"]
+
+    C --> D["buf[k] = raw reading<br/>k = sample_index mod N"]
+
+    D --> E[sample_index++<br/>wrap at N]
+
+    E --> F{samples stored >= N?}
+
+    F -->|No — warming up| G[Use partial mean over stored count<br/>or defer TX until N reached]
+    F -->|Yes| H["filtered = (buf[0] + … + buf[N-1]) / N<br/>arithmetic mean per channel"]
+
+    G --> I[Copy filtered values to report struct]
+    H --> I
+
+    I --> J{LoRa report due?}
+    J -->|Yes| K[Pack 19-byte payload<br/>filtered T · RH · TVOC · lux · CO₂]
+    J -->|No| L([Wait next sample cycle])
+    K --> M[LoRa TX]
+    M --> L
+
+    subgraph cfg [Typical configuration]
+        N1["N = 3 — faster response, less smoothing"]
+        N2["N = 5 — default balance"]
+        N3["N configurable in firmware<br/>no extra sensor reads or energy"]
+    end
+
+    style H fill:#9fc5e8,color:#000
+    style D fill:#9fc5e8,color:#000
+    style I fill:#9fc5e8,color:#000
+    style cfg fill:#f5f5f5,color:#000

@@ -1,0 +1,30 @@
+flowchart TD
+    A([RTC alarm / report due]) --> B[Wake MCU + radio clocks]
+
+    B --> C["① Start slow sensor first<br/>STCC4: exit_sleep 5 ms + measure_single_shot<br/>500 ms conversion running (~510 ms total)"]
+
+    C --> D["② Parallel fast sensors while CO₂ converts<br/>SHT40 enable + read · ~20 ms<br/>SGP30 enable + read · ~40 ms<br/>BH1620 enable + ADC · ~10 ms<br/>(~70 ms active — fits inside CO₂ window)"]
+
+    D --> F{CO₂ conversion done?<br/>~510 ms elapsed}
+
+    F -->|Still waiting ~440 ms| G["MCU STOP3 sleep<br/>RTC wake on CO₂ ready<br/>(no busy-wait spin)"]
+    G --> F
+
+    F -->|Ready| H[STCC4 read_measurement + enter_sleep]
+
+    H --> I[Push raw readings into N-sample buffers<br/>T · RH · TVOC · lux · CO₂]
+
+    I --> J[Compute mean of last N reads<br/>N typically 3–5 per channel]
+
+    J --> K[Pack 19-byte LoRa payload<br/>with filtered values]
+    K --> L[LoRa TX · 52 ms on-air]
+    L --> M[Disable sensor rails<br/>HUM_EN · TVOC_EN · BH1620 · CO₂ sleep]
+    M --> N([MCU STOP3 until next interval])
+
+    style G fill:#4a86c7,color:#fff
+    style N fill:#4a86c7,color:#fff
+    style H fill:#6aa84f,color:#fff
+    style M fill:#6aa84f,color:#fff
+    style L fill:#cc0000,color:#fff
+    style I fill:#9fc5e8,color:#000
+    style J fill:#9fc5e8,color:#000
