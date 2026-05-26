@@ -1,0 +1,15 @@
+# Private vendor email threads — keep local only
+Docs/SOLAR_PANEL_VENDOR.md
+Docs/SOLAR_PANEL_DAZHENG_SPEC.md
+
+# Local CAD / KiCad working files
+/Docs/Cad
+
+# Python / SKiDL scratch
+Docs/__pycache__/
+**/__pycache__/
+*.pyc
+Docs/skidl_REPL.*
+
+# Local dev session notes (machine-specific paths)
+Docs/SESSION_CHECKPOINT.md

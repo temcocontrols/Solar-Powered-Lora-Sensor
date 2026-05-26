@@ -1,0 +1,41 @@
+flowchart TB
+    subgraph HARVEST["Harvesting"]
+        SOLAR["Solar panel<br/>60×60 mm"]
+        BQ["BQ25505<br/>Cold start · MPPT"]
+        OR["Ideal diode OR<br/>LIC / Primary paths"]
+    end
+
+    subgraph STORE["Storage"]
+        SCAP["100 F · 3.8 V supercap<br/>LIC PATH"]
+        DIV["R10/R11 divider<br/>ADC_MONITOR"]
+    end
+
+    subgraph DELIV["Power delivery"]
+        BOOST["TPS61291 boost"]
+        RAIL["SYSTEM_RAIL 3.3 V<br/>C_STOR"]
+    end
+
+    subgraph CTRL["Sensing & control"]
+        MCU["RAK3172 LoRa MCU"]
+        SHT["SHT41<br/>always on"]
+        RAD["HLK-LD2410 radar<br/>P-FET gated"]
+        CO2["CO₂ sensor<br/>P-FET gated"]
+    end
+
+    SOLAR --> BQ
+    BQ --> OR
+    OR --> SCAP
+    SCAP --> BOOST
+    BOOST --> RAIL
+    RAIL --> MCU
+    RAIL --> SHT
+    MCU -->|"GPIO_RADAR"| RAD
+    MCU -->|"GPIO_CO2"| CO2
+    DIV --> MCU
+    BQ -->|"VBAT_OK · BAT_GD"| MCU
+
+    style MCU fill:#1f3864,color:#fff
+    style BQ fill:#d9ead3,color:#000
+    style SCAP fill:#cfe2f3,color:#000
+    style BOOST fill:#fff2cc,color:#000
+    style SHT fill:#d9d2e9,color:#000

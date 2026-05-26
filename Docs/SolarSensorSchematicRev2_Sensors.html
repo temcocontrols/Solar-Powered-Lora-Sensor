@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solar Sensor Schematic Rev2 - Sensors</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #f5f5f5; color: #222; }
+    .wrap { padding: 16px; max-width: 1400px; margin: 0 auto; }
+    nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    nav a {
+      padding: 8px 14px;
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      color: #1f3864;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+    }
+    nav a.active {
+      background: #1f3864;
+      color: #fff;
+      border-color: #1f3864;
+    }
+    nav a:hover:not(.active) { background: #eef2f8; }
+  .note {
+      background: #fff;
+      border-left: 4px solid #1f3864;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      margin-bottom: 16px;
+    }
+    th, td {
+      border: 1px solid #d9d9d9;
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    thead { position: sticky; top: 0; z-index: 10; }
+    tr.title th {
+      background: #1f3864;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      padding: 14px 10px;
+    }
+    tr.header th {
+      background: #1f3864;
+      color: #fff;
+      font-weight: bold;
+      text-align: center;
+    }
+    tr.odd td { background: #fff; }
+    tr.even td { background: #f2f2f2; }
+    tr.summary td { background: #e8eef7; font-weight: bold; }
+    td.num { text-align: right; white-space: nowrap; }
+    td.center { text-align: center; }
+    .footnote { font-size: 12px; color: #555; line-height: 1.6; }
+    h2 {
+      font-size: 16px;
+      color: #1f3864;
+      margin: 24px 0 12px;
+    }
+    .flow-panel {
+      background: #fff;
+      border: 1px solid #d9d9d9;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+      padding: 16px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .flow-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+      font-size: 13px;
+    }
+    .flow-legend span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .sw-cpu { background: #4a86c7; }
+    .sw-co2 { background: #e69138; }
+    .sw-avg { background: #9fc5e8; }
+    .sw-save { background: #6aa84f; }
+    .sw-tx { background: #cc0000; }
+  </style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { curve: 'basis' } });
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="SolarSensorSchematicRev2_BOM.html">Bill of Materials</a>
+      <a href="SolarSensorSchematicRev2_BlockDiagram.html">Block Diagram</a>
+      <a href="SolarSensorSchematicRev2_Sensors.html">Sensors</a>
+      <a href="SolarSensorSchematicRev2_EnergyBudget.html">Energy Budget</a>
+      <a href="SolarSensorSchematicRev2_SolarCells.html">Indoor Solar Cells</a>
+      <a href="SolarSensorSchematicRev2_TODO.html">Firmware TODO</a>
+      <a href="SolarSensorSchematicRev2.pdf">Schematic PDF</a>
+      <a href="SolarSensorSchematicRev2_BOM.xlsx">Spreadsheet (.xlsx)</a>
+    </nav>
+
+    <div class="legacy" style="background:#fff8e6;border-left:4px solid #e69138;padding:10px 14px;margin-bottom:16px;font-size:13px;line-height:1.5;">
+      <strong>Rev2 sensor timing (RA-08 firmware).</strong> Hybrid target sensors: SHT41 (always on), HLK-LD2410 radar, CO₂ (P-FET gated).
+      See <a href="SolarSensorSchematicRev2_BlockDiagram.html">block diagram</a>.
+    </div>
+
+    <div class="note">
+      Startup times reflect the current RA-08 firmware (<code>lora_myself_net</code>).
+      Power figures are from manufacturer datasheets at the board supply rail; sensors are switched off between reads via MOSFET load switches (Q1–Q16).
+    </div>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="11">Solar Sensor Schematic Rev2 — Sensor Startup &amp; Power</th></tr>
+        <tr class="header">
+          <th>Sensor</th>
+          <th>Ref</th>
+          <th>Measurement</th>
+          <th>Supply</th>
+          <th>Power-on Delay</th>
+          <th>Conversion / Init</th>
+          <th>First Valid Read</th>
+          <th>Active Current</th>
+          <th>Energy / Read</th>
+          <th>Off / Switched</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd">
+          <td>SHT40</td>
+          <td class="center">U5 / U7</td>
+          <td>Temperature &amp; humidity</td>
+          <td class="center">1.8 V</td>
+          <td class="num">10 ms</td>
+          <td class="num">10 ms</td>
+          <td class="num">~20 ms</td>
+          <td class="num">0.8 mA typ<br><span class="footnote">0.4 µA idle</span></td>
+          <td class="num">0.016 mAs<br><span class="footnote">29 µJ @ 1.8 V</span></td>
+          <td class="num">~0 µA</td>
+          <td>HUM_EN (PA6) enables 1.8 V rail; populate one of two footprints</td>
+        </tr>
+        <tr class="even">
+          <td>SGP30</td>
+          <td class="center">U3</td>
+          <td>TVOC / eCO2</td>
+          <td class="center">1.8 V</td>
+          <td class="num">20 ms</td>
+          <td class="num">20 ms IAQ init<br>20 ms per sample</td>
+          <td class="num">~40 ms</td>
+          <td class="num">48 mA typ</td>
+          <td class="num">1.92 mAs<br><span class="footnote">3.5 mJ @ 1.8 V</span></td>
+          <td class="num">~0 µA</td>
+          <td>TVOC_EN (PA7); optional TVOC section on schematic</td>
+        </tr>
+        <tr class="odd">
+          <td>STCC4</td>
+          <td class="center">U6</td>
+          <td>CO₂</td>
+          <td class="center">Switched</td>
+          <td class="num">1000 ms boot<br>5 ms wake from sleep</td>
+          <td class="num">500 ms single-shot</td>
+          <td class="num">~510 ms per sample</td>
+          <td class="num">100 µA single-shot @ 10 s<br>1 µA sleep</td>
+          <td class="num">1.0 mAs single-shot<br><span class="footnote">3.3 mJ · recommended</span></td>
+          <td class="num">~0 µA hard off<br>1 µA sleep mode</td>
+          <td>STCC4 supports <code>enter_sleep_mode</code> (0x3650) and <code>measure_single_shot</code> (0x219D); ASC state retained in sleep</td>
+        </tr>
+        <tr class="even">
+          <td>BH1620FVC / GC2</td>
+          <td class="center">U8</td>
+          <td>Ambient light (lux)</td>
+          <td class="center">Switched</td>
+          <td class="num">10 ms</td>
+          <td class="num">&lt; 1 ms (ADC)</td>
+          <td class="num">~10 ms</td>
+          <td class="num">90 µA typ</td>
+          <td class="num">0.0009 mAs<br><span class="footnote">3 µJ @ 3.3 V</span></td>
+          <td class="num">0 µA (switched off)</td>
+          <td>Analog current output; BOM lists GC2, firmware targets BH1620FVC</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">Node-Level Summary (firmware boot &amp; first report)</th></tr>
+        <tr class="header">
+          <th>Phase</th>
+          <th>Duration</th>
+          <th>Dominated By</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd">
+          <td>Sensor init at boot</td>
+          <td class="num">~1.0 s</td>
+          <td>STCC4 power-on wait</td>
+          <td>SHT40, SGP30, and BH1620 init complete within this window</td>
+        </tr>
+        <tr class="even">
+          <td>First CO₂ sample</td>
+          <td class="num">~510 ms</td>
+          <td>STCC4 single-shot conversion</td>
+          <td>exit_sleep + measure_single_shot + read; no continuous warm-up</td>
+        </tr>
+        <tr class="odd">
+          <td>Typical per-report cycle</td>
+          <td class="num">~510 ms</td>
+          <td>STCC4 conversion window</td>
+          <td>Fast sensors read in parallel during CO₂ conversion (~70 ms active)</td>
+        </tr>
+        <tr class="summary">
+          <td>Peak sensor current (all on)</td>
+          <td class="num">~49 mA</td>
+          <td>SGP30 dominates</td>
+          <td>STCC4 ~2 mA during single-shot; SGP30 ~48 mA during TVOC read</td>
+        </tr>
+        <tr class="summary">
+          <td>Sensor energy per report (10 s interval)</td>
+          <td class="num">~3.0 mAs</td>
+          <td>STCC4 single-shot + sleep</td>
+          <td>SHT40 + SGP30 + STCC4 + BH1620; filtering adds no extra reads</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>LoRa Transmit Energy</h2>
+    <div class="note">
+      Sensor reports are sent from <code>node_send_sensor_report()</code> in <code>lora_driver.c</code> as a fixed <strong>19-byte</strong> binary packet (opcode <code>0x21</code>).
+      LoRa PHY settings: SF7, 125 kHz BW, CR 4/5, 8-symbol preamble, explicit header, CRC on, <strong>14 dBm</strong> TX power.
+      Time-on-air computed with the same formula as <code>RadioTimeOnAir()</code> in <code>lora/radio/sx126x/radio.c</code>.
+    </div>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">Sensor Report Packet Layout (19 bytes)</th></tr>
+        <tr class="header">
+          <th>Byte(s)</th>
+          <th>Field</th>
+          <th>Format</th>
+          <th>Source in firmware</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd"><td class="center">0</td><td>Start marker</td><td><code>0xA0</code></td><td><code>pkt[0]</code></td></tr>
+        <tr class="even"><td class="center">1</td><td>Opcode</td><td><code>0x21</code> sensor report</td><td><code>pkt[1]</code></td></tr>
+        <tr class="odd"><td class="center">2–5</td><td>Node UID</td><td>4 bytes, chip ID</td><td><code>get_unique_id_bytes()</code></td></tr>
+        <tr class="even"><td class="center">6–7</td><td>Temperature</td><td>int16, °C × 100</td><td>SHT40</td></tr>
+        <tr class="odd"><td class="center">8–9</td><td>Humidity</td><td>uint16, %RH × 100</td><td>SHT40</td></tr>
+        <tr class="even"><td class="center">10–11</td><td>Supercap voltage</td><td>uint16, mV</td><td>ADC monitor (PA8)</td></tr>
+        <tr class="odd"><td class="center">12–13</td><td>CO₂</td><td>uint16, ppm</td><td>STCC4</td></tr>
+        <tr class="even"><td class="center">14–15</td><td>TVOC</td><td>uint16, ppb</td><td>SGP30</td></tr>
+        <tr class="odd"><td class="center">16–17</td><td>Light</td><td>uint16, lux</td><td>BH1620</td></tr>
+        <tr class="even"><td class="center">18</td><td>End marker</td><td><code>0xA1</code></td><td><code>pkt[18]</code></td></tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">LoRa TX Budget per Packet</th></tr>
+        <tr class="header">
+          <th>Parameter</th>
+          <th>Value</th>
+          <th>Notes</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd">
+          <td>Payload size</td>
+          <td class="num">19 bytes</td>
+          <td><code>Radio.Send(pkt, sizeof(pkt))</code></td>
+          <td><code>lora_driver.c</code></td>
+        </tr>
+        <tr class="even">
+          <td>Spreading factor / BW / CR</td>
+          <td class="num">SF7 · 125 kHz · 4/5</td>
+          <td>Preamble length 8</td>
+          <td><code>LORA_SPREADING_FACTOR</code>, <code>LORA_BANDWIDTH</code>, <code>LORA_CODINGRATE</code></td>
+        </tr>
+        <tr class="odd">
+          <td>Time on air</td>
+          <td class="num">52 ms</td>
+          <td>38 payload symbols + preamble; 1.024 ms/symbol</td>
+          <td><code>RadioTimeOnAir(MODEM_LORA, 19)</code></td>
+        </tr>
+        <tr class="even">
+          <td>TX power</td>
+          <td class="num">14 dBm</td>
+          <td>Module spec lists 115 mA @ 21 dBm; 14 dBm not tabulated</td>
+          <td><code>TX_OUTPUT_POWER</code></td>
+        </tr>
+        <tr class="odd">
+          <td>TX current (est.)</td>
+          <td class="num">~60 mA typ</td>
+          <td>ASR6601 module @ 3.3 V; estimate scaled from 115 mA @ 21 dBm spec</td>
+          <td>RA-08 module datasheet</td>
+        </tr>
+        <tr class="summary">
+          <td>Energy per TX</td>
+          <td class="num">3.1 mAs · 10.3 mJ</td>
+          <td>60 mA × 52 ms @ 3.3 V supply</td>
+          <td>Calculated</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">Full Report Energy Budget (10 s interval, periodic)</th></tr>
+        <tr class="header">
+          <th>Contributor</th>
+          <th>Charge</th>
+          <th>Energy @ rail</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd"><td>SHT40 read</td><td class="num">0.016 mAs</td><td class="num">29 µJ</td><td>0.8 mA × 20 ms</td></tr>
+        <tr class="even"><td>SGP30 read</td><td class="num">1.92 mAs</td><td class="num">3.5 mJ</td><td>48 mA × 40 ms (enable + measure)</td></tr>
+        <tr class="odd"><td>STCC4 (single-shot + sleep)</td><td class="num">1.0 mAs</td><td class="num">3.3 mJ</td><td>2.0 mA × 505 ms per sample</td></tr>
+        <tr class="even"><td>BH1620 read</td><td class="num">0.001 mAs</td><td class="num">3 µJ</td><td>90 µA × 10 ms</td></tr>
+        <tr class="odd"><td>LoRa TX</td><td class="num">3.1 mAs</td><td class="num">10.3 mJ</td><td>19-byte packet, 52 ms on air</td></tr>
+        <tr class="summary"><td>Total (optimized)</td><td class="num">~6.0 mAs</td><td class="num">~18 mJ</td><td>≈600 µA average over 10 s; N-read filter is software-only</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Power Optimization Flowchart</h2>
+    <div class="note">
+      <strong>Optimized path:</strong> kick off STCC4 CO₂ first (~510 ms conversion), read SHT40 / SGP30 / BH1620 in parallel (~70 ms total),
+      STOP3 while CO₂ finishes, then apply an <strong>N-read filter</strong> — arithmetic mean of the last <strong>N</strong> raw readings per channel (N typically <strong>3–5</strong>, default 5).
+      Filtering uses prior report-cycle samples only; <strong>no extra sensor reads or energy</strong>.
+      <code>NODE_STOP3_ENABLE</code> is currently 0 in <code>lora_driver.c</code>.
+    </div>
+
+    <div class="flow-panel">
+      <pre class="mermaid">
+flowchart TD
+    A([RTC alarm / report due]) --> B[Wake MCU + radio clocks]
+
+    B --> C["① Start slow sensor first<br/>STCC4: exit_sleep 5 ms + measure_single_shot<br/>500 ms conversion running (~510 ms total)"]
+
+    C --> D["② Parallel fast sensors while CO₂ converts<br/>SHT40 enable + read · ~20 ms<br/>SGP30 enable + read · ~40 ms<br/>BH1620 enable + ADC · ~10 ms<br/>(~70 ms active — fits inside CO₂ window)"]
+
+    D --> F{CO₂ conversion done?<br/>~510 ms elapsed}
+
+    F -->|Still waiting ~440 ms| G["MCU STOP3 sleep<br/>RTC wake on CO₂ ready<br/>(no busy-wait spin)"]
+    G --> F
+
+    F -->|Ready| H[STCC4 read_measurement + enter_sleep]
+
+    H --> I[Push raw readings into N-sample buffers<br/>T · RH · TVOC · lux · CO₂]
+
+    I --> J[Compute mean of last N reads<br/>N typically 3–5 per channel]
+
+    J --> K[Pack 19-byte LoRa payload<br/>with filtered values]
+    K --> L[LoRa TX · 52 ms on-air]
+    L --> M[Disable sensor rails<br/>HUM_EN · TVOC_EN · BH1620 · CO₂ sleep]
+    M --> N([MCU STOP3 until next interval])
+
+    style G fill:#4a86c7,color:#fff
+    style N fill:#4a86c7,color:#fff
+    style H fill:#6aa84f,color:#fff
+    style M fill:#6aa84f,color:#fff
+    style L fill:#cc0000,color:#fff
+    style I fill:#9fc5e8,color:#000
+    style J fill:#9fc5e8,color:#000
+      </pre>
+      <div class="flow-legend">
+        <div><span class="sw-cpu"></span>MCU low-power window (STOP3 / RTC wake)</div>
+        <div><span class="sw-save"></span>Sensor sleep or rail off</div>
+        <div><span class="sw-tx"></span>LoRa transmit burst</div>
+        <div><span class="sw-avg"></span>N-read filter — mean of last N samples (software only)</div>
+      </div>
+    </div>
+
+    <h2>N-Read Filter (typically 3–5 samples)</h2>
+    <div class="note">
+      Each report cycle stores one raw reading per channel in a ring buffer of depth <strong>N</strong>.
+      The value sent over LoRa is the arithmetic mean of the last N readings.
+      <strong>N = 3</strong> responds faster; <strong>N = 5</strong> (default) smooths more. Configurable in firmware — zero additional sensor energy.
+    </div>
+
+    <div class="flow-panel">
+      <pre class="mermaid">
+flowchart TD
+    A([Report cycle — raw sensor reads complete]) --> B[For each channel:<br/>T · RH · TVOC · lux · CO₂]
+
+    B --> C["Ring buffer per channel<br/>buf[0..N-1]  ·  N = filter depth"]
+
+    C --> D["buf[k] = raw reading<br/>k = sample_index mod N"]
+
+    D --> E[sample_index++<br/>wrap at N]
+
+    E --> F{samples stored >= N?}
+
+    F -->|No — warming up| G[Use partial mean over stored count<br/>or defer TX until N reached]
+    F -->|Yes| H["filtered = (buf[0] + … + buf[N-1]) / N<br/>arithmetic mean per channel"]
+
+    G --> I[Copy filtered values to report struct]
+    H --> I
+
+    I --> J{LoRa report due?}
+    J -->|Yes| K[Pack 19-byte payload<br/>filtered T · RH · TVOC · lux · CO₂]
+    J -->|No| L([Wait next sample cycle])
+    K --> M[LoRa TX]
+    M --> L
+
+    style H fill:#9fc5e8,color:#000
+    style D fill:#9fc5e8,color:#000
+    style I fill:#9fc5e8,color:#000
+      </pre>
+      <div class="flow-legend">
+        <div><span class="sw-avg"></span>Filter / buffer update (no sensor activity)</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="7">STCC4 CO₂ Options (10 s report interval)</th></tr>
+        <tr class="header">
+          <th>Option</th>
+          <th>CO₂ active time</th>
+          <th>Avg CO₂ current</th>
+          <th>Avg power @ 3.3 V</th>
+          <th>Energy / 10 s</th>
+          <th>First reading after boot</th>
+          <th>Trade-offs</th>
+        </tr>
+      </thead>
+      <tbody>
+<tr class="even">
+          <td>Single-shot + sleep (datasheet)</td>
+          <td class="num">~506 ms per sample</td>
+          <td class="num">100 µA</td>
+          <td class="num">0.33 mW</td>
+          <td class="num">1.0 mAs · 3.3 mJ</td>
+          <td class="num">~510 ms</td>
+          <td>Best energy; ASC state kept in sleep; 5–600 s interval recommended for ASC accuracy</td>
+        </tr>
+<tr class="even">
+          <td>Hard power-off via CO2_EN</td>
+          <td class="num">~1.5 s powered per sample</td>
+          <td class="num">150 µA avg</td>
+          <td class="num">0.50 mW</td>
+          <td class="num">1.5 mAs · 5.0 mJ</td>
+          <td class="num">~1000 ms boot</td>
+          <td>Lowest leakage but resets sensor state; slower wake than I²C sleep; ASC may need re-conditioning</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="3">STCC4 Sleep / Single-Shot Commands (Sensirion datasheet)</th></tr>
+        <tr class="header">
+          <th>Command</th>
+          <th>Hex</th>
+          <th>Execution time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd"><td>exit_sleep_mode</td><td class="center">0x00</td><td class="num">5 ms</td></tr>
+        <tr class="even"><td>measure_single_shot</td><td class="center">0x219D</td><td class="num">500 ms</td></tr>
+        <tr class="odd"><td>read_measurement</td><td class="center">0xEC05</td><td class="num">1 ms</td></tr>
+        <tr class="even"><td>enter_sleep_mode</td><td class="center">0x3650</td><td class="num">1 ms · ~1 µA sleep</td></tr>
+        <tr class="odd"><td>stop_continuous_measurement</td><td class="center">0x3F86</td><td class="num">up to 1200 ms</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Indoor Solar Sizing (5 min report interval)</h2>
+    <div class="note">
+      Budget assumes a <strong>40 mm × 40 mm</strong> (16 cm²) high-efficiency indoor amorphous panel (Amorton / optimized a-Si class),
+      <strong>STCC4 single-shot + sleep</strong> CO₂ (required at this interval), MCU STOP3 between reports,
+      BQ25505 harvester (~75% end-to-end), and 0.22 F supercap for TX bursts.
+      Continuous CO₂ (~970 µA average) needs ~3.2 mW and is not viable on indoor PV this size.
+    </div>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">Node Energy @ 300 s (5 min) Interval</th></tr>
+        <tr class="header">
+          <th>Contributor</th>
+          <th>Charge / interval</th>
+          <th>Energy</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd"><td>SHT40 + SGP30 + BH1620 + LoRa TX</td><td class="num">5.0 mAs</td><td class="num">17 mJ</td><td>Burst reads + 19-byte packet</td></tr>
+        <tr class="even"><td>STCC4 single-shot + sleep</td><td class="num">1.3 mAs</td><td class="num">4 mJ</td><td>Within STCC4 datasheet 5–600 s recommendation</td></tr>
+        <tr class="odd"><td>MCU sleep (1.3 µA)</td><td class="num">0.4 mAs</td><td class="num">1 mJ</td><td>RA-08 STOP3 between reports</td></tr>
+        <tr class="summary"><td>Total (optimized)</td><td class="num">7.1 mAs</td><td class="num">24 mJ</td><td>Average draw ≈ 24 µA · 78 µW @ 3.3 V</td></tr>
+</tbody>
+    </table>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">40 × 40 mm Indoor Panel — Illuminance Required</th></tr>
+        <tr class="header">
+          <th>Panel type</th>
+          <th>Power density (reference)</th>
+          <th>Break-even lux</th>
+          <th>Comfortable lux (≈2× margin)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd">
+          <td>High-efficiency indoor a-Si<br><span class="footnote">Amorton-class, 20% indoor eff.</span></td>
+          <td class="num">8 µW/cm² @ 200 lux</td>
+          <td class="num">~210 lux</td>
+          <td class="num">400–500 lux</td>
+        </tr>
+        <tr class="even">
+          <td>Optimized lab a-Si cell</td>
+          <td class="num">25.6 µW/cm² @ 500 lux</td>
+          <td class="num">~170 lux</td>
+          <td class="num">350 lux</td>
+        </tr>
+        <tr class="odd">
+          <td>Indoor GaAs (premium)</td>
+          <td class="num">18 µW/cm² @ 200 lux</td>
+          <td class="num">~95 lux</td>
+          <td class="num">200 lux</td>
+        </tr>
+        <tr class="even">
+          <td>Typical indoor a-Si</td>
+          <td class="num">3.6 µW/cm² @ 200 lux</td>
+          <td class="num">~470 lux</td>
+          <td class="num">900+ lux</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table>
+      <thead>
+        <tr class="title"><th colspan="4">Amorton-Class 40 × 40 mm Panel — Harvest vs Illuminance</th></tr>
+        <tr class="header">
+          <th>Illuminance</th>
+          <th>Panel output (16 cm²)</th>
+          <th>After BQ25505 (~75%)</th>
+          <th>5 min budget (102 µW needed)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="odd"><td class="num">100 lux</td><td class="num">64 µW</td><td class="num">48 µW</td><td>Deficit — dim corridor / far from window</td></tr>
+        <tr class="even"><td class="num">150 lux</td><td class="num">96 µW</td><td class="num">72 µW</td><td>Deficit — typical home away from window</td></tr>
+        <tr class="odd"><td class="num">200 lux</td><td class="num">128 µW</td><td class="num">96 µW</td><td>Marginal — bright home / office perimeter</td></tr>
+        <tr class="even"><td class="num">250 lux</td><td class="num">160 µW</td><td class="num">120 µW</td><td>Sustainable — well-lit office</td></tr>
+        <tr class="odd"><td class="num">300 lux</td><td class="num">192 µW</td><td class="num">144 µW</td><td>Comfortable — standard office lighting</td></tr>
+        <tr class="even"><td class="num">500 lux</td><td class="num">320 µW</td><td class="num">240 µW</td><td>Good headroom — bright office / retail</td></tr>
+      </tbody>
+    </table>
+
+    <p class="footnote">
+      Indoor lux reference: dim living room 50–100 · office 300–500 · retail 500–1000.
+      Break-even includes 30% margin for cell aging, soiling, and harvester losses.
+      Panel specs from Panasonic Amorton (8 µW/cm² @ 200 lux), EM Microelectronic solar guide, and indoor a-Si literature.
+      Actual lux at the panel depends on mounting — face panel toward fixtures; avoid deep shade.
+    </p>
+
+    <p class="footnote">
+      Sources: firmware constants in <code>sht40.c</code>, <code>sgp30.c</code>, <code>stcc4.c</code>, <code>bh1620.c</code>, <code>lora_driver.c</code>, and <code>lora_config.h</code>;
+      STCC4 electrical specs and command timings from the Sensirion STCC4 datasheet (D1, June 2025);
+      LoRa time-on-air from <code>RadioTimeOnAir()</code> in <code>lora/radio/sx126x/radio.c</code>;
+      RA-08/ASR6601 module current from Ai-Thinker RA-08H datasheet.
+      Energy = current × active time (mAs); joules = supply voltage × mAs.
+    </p>
+  </div>
+</body>
+</html>
