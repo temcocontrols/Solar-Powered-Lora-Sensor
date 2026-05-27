@@ -2,7 +2,7 @@
 
 **Task tracker:** [SolarSensorSchematicRev2_TODO.html](SolarSensorSchematicRev2_TODO.html) · spreadsheet tab **Firmware TODO**
 
-**Architecture:** [Block Diagram](SolarSensorSchematicRev2_BlockDiagram.html) · [POWER_SYSTEM_ANALYSIS.md](POWER_SYSTEM_ANALYSIS.md)
+**Architecture:** [Block Diagram](SolarSensorSchematicRev2_BlockDiagram.html) · [POWER_SYSTEM_ANALYSIS.md](POWER_SYSTEM_ANALYSIS.md) · [FIRMWARE_POWER_MANAGER_DESIGN.md](FIRMWARE_POWER_MANAGER_DESIGN.md)
 
 Regenerate docs: `python Docs/build_block_diagram.py` · `python Docs/firmware_todo.py`
 
